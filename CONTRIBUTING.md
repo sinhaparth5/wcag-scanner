@@ -119,14 +119,14 @@ As this is an accessibility tool, we hold ourselves to high standards:
 3. Test with screen readers when applicable
 4. Ensure keyboard navigability
 
-## Git Commit Messages
+### Git Commit Messages
 
  - Use the present tense ("Add feature" not "Added feature")
  - Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
  - Limit the first line to 72 characters or less
  - Reference issues and pull requests liberally after the first line
  - Consider starting the commit message with an applicable emoji:
- 
+
    - 🚀 :rocket: when adding features
    - 🐛 :bug: when fixing bugs
    - 📝 :memo: when adding documentation
@@ -136,22 +136,25 @@ As this is an accessibility tool, we hold ourselves to high standards:
 
 
 
-Review Process
+### Review Process
 The project maintainers will review your pull request. They might suggest changes, improvements, or alternatives.
+
 Some things that will increase the chance that your pull request is accepted:
 
-Write tests
-Follow style guidelines
-Write good commit messages
-Add documentation
+- Write tests
+- Follow style guidelines
+- Write good commit messages
+- Add documentation
 
-Community
+### Community
 Join the conversation about WCAG Scanner:
 
-GitHub Discussions
-Stack Overflow
+- GitHub Discussions
+- Stack Overflow
 
-Recognition
+### Recognition
 Contributors are recognized in our README.md and in release notes. We appreciate the time and effort you put into improving this project!
+
+***
 
 Thank you for reading through our contribution guidelines. We're excited to see what you build and how you can help improve accessibility on the web through WCAG Scanner!
