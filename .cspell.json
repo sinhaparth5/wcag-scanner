@@ -29,11 +29,7 @@
     "npmjs",
     "precommit",
     "prebuild",
-    "attibutes",
-    "Explicited",
-    "fielsets",
-    "svgs",
-    "sucessfully"
+    "svgs"
   ],
   "ignoreRegExpList": [
     "/'.*?'/",

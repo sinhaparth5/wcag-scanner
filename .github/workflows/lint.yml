@@ -30,8 +30,14 @@ jobs:
             - name: TypeScript build check
               run: npm run build || echo "TypeScript build issues found, but continuing workflow"
 
+            - name: Run tests with coverage
+              run: npm test -- --coverage
+
             - name: Upload coverage reports to Codecav
               uses: codecov/codecov-action@v5
               with:
                 token: ${{ secrets.CODECOV_TOKEN }}
                 slug: sinhaparth5/wcag-scanner
+                directory: ./coverage/
+                fail_ci_if_error: false
+                verbose: true
