@@ -68,6 +68,24 @@ Please follow these steps to submit a pull request:
    git clone https://github.com/sinhaparth5/wcag-scanner.git
    cd wcag-scanner
    ```
+3. Install dependencies
+   ```bash
+   npm install
+   ```
+4. Create a branch for your changes
+   ```bash
+   git switch -c feature-branch
+   ```
+5. Make your changes and write tests
+6. Run Tests
+   ```bash
+   npm test
+   ```
+7. Run linting
+   ```bash
+   npm run lint
+   ```
+
 Coding Standards
 TypeScript Style Guide
 We follow the Airbnb TypeScript Style Guide with some modifications defined in our .eslintrc.js file.
