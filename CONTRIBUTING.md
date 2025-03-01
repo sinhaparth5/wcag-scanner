@@ -127,12 +127,12 @@ As this is an accessibility tool, we hold ourselves to high standards:
  - Reference issues and pull requests liberally after the first line
  - Consider starting the commit message with an applicable emoji:
 
-   - 🚀 :rocket: when adding features
-   - 🐛 :bug: when fixing bugs
-   - 📝 :memo: when adding documentation
-   - 🎨 :art: when improving code structure
-   - ⚡️ :zap: when improving performance
-   - 🧪 :test_tube: when adding tests
+   - 🚀 `:rocket:` when adding features
+   - 🐛 `:bug:` when fixing bugs
+   - 📝 `:memo:` when adding documentation
+   - 🎨 `:art:` when improving code structure
+   - ⚡️ `:zap:` when improving performance
+   - 🧪 `:test_tube:` when adding tests
 
 
 
