@@ -87,7 +87,7 @@ export interface Pass extends ResultItem {}
 /**
  * Scanner Result
  */
-export interface ScanResult {
+export interface ScanResults {
     /** Passes */
     passes: Pass[];
     /** Violations */
