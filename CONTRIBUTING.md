@@ -86,43 +86,43 @@ Please follow these steps to submit a pull request:
    npm run lint
    ```
 
-Coding Standards
-TypeScript Style Guide
-We follow the Airbnb TypeScript Style Guide with some modifications defined in our .eslintrc.js file.
+## Coding Standards
+### TypeScript Style Guide
+We follow the [Airbnb TypeScript Style Guide](https://github.com/airbnb/javascript) with some modifications defined in our `eslintrc.config.js` file.
+
 Key points:
+ - Use 2 spaces for indentation
+ - Use single quotes for strings
+ - Use camelCase for variables and functions
+ - Use PascalCase for classes and interfaces
+ - Add proper JSDoc comments for all public APIs
+ - Maximum line length is 100 characters
 
-Use 2 spaces for indentation
-Use single quotes for strings
-Use camelCase for variables and functions
-Use PascalCase for classes and interfaces
-Add proper JSDoc comments for all public APIs
-Maximum line length is 100 characters
+### Testing
 
-Testing
+ - All new features should have accompanying tests
+ - Aim for high test coverage
+ - Both unit and integration tests are appreciated
 
-All new features should have accompanying tests
-Aim for high test coverage
-Both unit and integration tests are appreciated
+### Documentation
 
-Documentation
+ - Document all public APIs using JSDoc comments
+ - Update README.md if necessary
+ - Update any relevant documentation in /docs folder
+ - Document complex algorithms and workflows
 
-Document all public APIs using JSDoc comments
-Update README.md if necessary
-Update any relevant documentation in /docs folder
-Document complex algorithms and workflows
-
-Accessibility Standards
+### Accessibility Standards
 As this is an accessibility tool, we hold ourselves to high standards:
 
-All new UI components must meet WCAG 2.1 AA standards at minimum
-Follow semantic HTML practices
-Test with screen readers when applicable
-Ensure keyboard navigability
+1. All new UI components must meet WCAG 2.1 AA standards at minimum
+2. Follow semantic HTML practices
+3. Test with screen readers when applicable
+4. Ensure keyboard navigability
 
-Git Commit Messages
+## Git Commit Messages
 
-Use the present tense ("Add feature" not "Added feature")
-Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+ - Use the present tense ("Add feature" not "Added feature")
+- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
 Limit the first line to 72 characters or less
 Reference issues and pull requests liberally after the first line
 Consider starting the commit message with an applicable emoji:
