@@ -26,6 +26,16 @@ export interface ElementInfo {
     src?: string | null;
     /** Element text context */
     textContent?: string | null;
+    /** Input type attribute */
+    type?: string | null;
+    /** Input name attribute */
+    name?: string | null;
+    /** Form control value */
+    shape?: string | null;
+    /** Input coordinates */
+    coords?: string | null;
+    /** Input checked status */
+    href?: string | null;
 }
 
 /**
