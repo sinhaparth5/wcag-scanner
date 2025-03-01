@@ -2,7 +2,16 @@
   "name": "wcag-scanner",
   "version": "1.0.0",
   "description": "Scan HTML for WCAG accessibility violations with AI-powered fix suggestions",
-  "main": "index.js",
+  "main": "main/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "test": "jest",
     "build": "rimraf dist && tsc",
