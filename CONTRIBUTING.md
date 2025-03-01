@@ -122,17 +122,17 @@ As this is an accessibility tool, we hold ourselves to high standards:
 ## Git Commit Messages
 
  - Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-Limit the first line to 72 characters or less
-Reference issues and pull requests liberally after the first line
-Consider starting the commit message with an applicable emoji:
-
-🚀 :rocket: when adding features
-🐛 :bug: when fixing bugs
-📝 :memo: when adding documentation
-🎨 :art: when improving code structure
-⚡️ :zap: when improving performance
-🧪 :test_tube: when adding tests
+ - Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+ - Limit the first line to 72 characters or less
+ - Reference issues and pull requests liberally after the first line
+ - Consider starting the commit message with an applicable emoji:
+ 
+   - 🚀 :rocket: when adding features
+   - 🐛 :bug: when fixing bugs
+   - 📝 :memo: when adding documentation
+   - 🎨 :art: when improving code structure
+   - ⚡️ :zap: when improving performance
+   - 🧪 :test_tube: when adding tests
 
 
 
