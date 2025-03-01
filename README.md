@@ -6,7 +6,7 @@
   [![npm version](https://img.shields.io/npm/v/wcag-scanner.svg)](https://www.npmjs.com/package/wcag-scanner)
   ![example workflow](https://github.com/sinhaparth5/wcag-scanner/actions/workflows/lint.yml/badge.svg)
   ![example workflow](https://github.com/sinhaparth5/wcag-scanner/actions/workflows/typo-check.yml/badge.svg)
-  [![codecov](https://codecov.io/gh/sinhaparth5/wcag-scanner/branch/main/graph/badge.svg)](https://codecov.io/gh/sinhaparth5/wcag-scanner)
+  [![codecov](https://codecov.io/gh/sinhaparth5/wcag-scanner/graph/badge.svg?token=TOJOPXNYGV)](https://codecov.io/gh/sinhaparth5/wcag-scanner)
   [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/sinhaparth5/wcag-scanner/blob/main/LICENSE)
   ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/sinhaparth5/wcag-scanner)
   ![GitHub top language](https://img.shields.io/github/languages/top/sinhaparth5/wcag-scanner)
