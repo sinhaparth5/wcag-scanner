@@ -47,7 +47,7 @@ export class WCAGScanner {
                 runScripts: 'dangerously'
             });
             this.document = this.dom.window.document;
-            this.window = this.dom.window;
+            this.window = this.dom.window as unknown as Window;
 
             await new Promise(resolve => setTimeout(resolve, 100));
             return true;

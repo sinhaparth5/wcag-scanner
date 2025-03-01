@@ -101,5 +101,5 @@ export interface ScanResults {
  */
 export interface Rule {
     /** Run the rule check */
-    check(document: Document, window: Window, options: ScannerOptions): Promise<ResultItem>;
+    check(document: Document, window: Window, options: ScannerOptions): Promise<ScanResults>;
 }
