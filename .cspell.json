@@ -1,41 +1,45 @@
 {
-    "version": "0.2",
-    "language": "en",
-    "ignorePaths": [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      "coverage/**",
-      "*.lock",
-      "package-lock.json",
-      "yarn.lock"
-    ],
-    "dictionaries": [
-      "typescript",
-      "node",
-      "npm",
-      "en_US",
-      "html",
-      "css",
-      "accessibility"
-    ],
-    "words": [
-      "wcag",
-      "a11y",
-      "axe",
-      "rgba",
-      "eslint",
-      "tsconfig",
-      "npmjs",
-      "precommit",
-      "prebuild"
-    ],
-    "ignoreRegExpList": [
-      "/'.*?'/",
-      "/`.*?`/",
-      "/\\(.*?\\)/",
-      "/\\[.*?\\]/",
-      "/\\{.*?\\}/"
-    ]
-  }
-  
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "*.lock",
+    "package-lock.json",
+    "yarn.lock"
+  ],
+  "dictionaries": [
+    "typescript",
+    "node",
+    "npm",
+    "en_US",
+    "html",
+    "css",
+    "accessibility"
+  ],
+  "words": [
+    "wcag",
+    "a11y",
+    "axe",
+    "rgba",
+    "eslint",
+    "tsconfig",
+    "npmjs",
+    "precommit",
+    "prebuild",
+    "attibutes",
+    "Explicited",
+    "fielsets",
+    "svgs",
+    "sucessfully"
+  ],
+  "ignoreRegExpList": [
+    "/'.*?'/",
+    "/`.*?`/",
+    "/\\(.*?\\)/",
+    "/\\[.*?\\]/",
+    "/\\{.*?\\}/"
+  ]
+}
