@@ -21,7 +21,7 @@ export default {
         // Check input elements for labels
         checkInputLabels(document, results);
 
-        // Check required attibutes and ARIA
+        // Check required attributes and ARIA
         checkRequiredAttributes(document, results);
 
         // Check form accessibility
@@ -60,13 +60,13 @@ function checkInputLabels(document: Document, results: ScanResults): void {
         }
 
         // Check for accessibility name
-        const hasExplicited = control.id && document.querySelector(`label[for="${control.id}]`);
+        const hasExplicitLabel = control.id && document.querySelector(`label[for="${control.id}]`);
         const hasWrappingLabel = control.closest('label');
         const hasAriaLabel = control.hasAttribute('aria-label');
         const hasAriaLabelledby = control.hasAttribute('aria-labelledby');
         const hasTitle = control.hasAttribute('title');
 
-        if (!hasExplicited && !hasWrappingLabel && !hasAriaLabel && !hasAriaLabelledby && !hasTitle) {
+        if (!hasExplicitLabel && !hasWrappingLabel && !hasAriaLabel && !hasAriaLabelledby && !hasTitle) {
             // Form control has no  accessible name
             results.violations.push({
                 rule: 'form-label',
@@ -78,7 +78,7 @@ function checkInputLabels(document: Document, results: ScanResults): void {
                 helpUrl: 'https://www.w3.org/WAI/WCAG21/Understanding/labels-and-instructions.html',
                 impact: "critical"
             });
-        } else if (hasExplicited || hasWrappingLabel) {
+        } else if (hasExplicitLabel || hasWrappingLabel) {
             results.passes.push({
                 rule: 'form-label',
                 element: info,
@@ -95,7 +95,7 @@ function checkInputLabels(document: Document, results: ScanResults): void {
         }
 
         // Check placeholder as label issue
-        if (control.hasAttribute('placeholder') && !hasExplicited && !hasWrappingLabel && !hasAriaLabel && !hasAriaLabelledby) {
+        if (control.hasAttribute('placeholder') && !hasExplicitLabel && !hasWrappingLabel && !hasAriaLabel && !hasAriaLabelledby) {
             results.warnings.push({
                 rule: 'placeholder-label',
                 element: info,
@@ -144,10 +144,10 @@ function checkRequiredAttributes(document: Document, results: ScanResults): void
         }
     });
 
-    // Check fielsets for legends
-    const fielsets = document.querySelectorAll('fieldset');
+    // Check fieldsets for legends
+    const fieldsets = document.querySelectorAll('fieldset');
 
-    fielsets.forEach(fieldset => {
+    fieldsets.forEach(fieldset => {
         const info: ElementInfo = {
             tagName: 'fieldset',
             id: fieldset.id || null
