@@ -30,14 +30,18 @@ export interface ElementInfo {
     type?: string | null;
     /** Input name attribute */
     name?: string | null;
-    /** Form control value */
+    /** shapes for the elements */
     shape?: string | null;
     /** Input coordinates */
     coords?: string | null;
-    /** Input checked status */
+    /** href for the elements */
     href?: string | null;
     /** Roles for ARIA label */
     role?: string | null;
+    /** Attribute Names */
+    attrName?: string;
+    /** Attribute Values */
+    attrValue?: string;
 }
 
 /**
