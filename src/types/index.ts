@@ -42,6 +42,10 @@ export interface ElementInfo {
     attrName?: string;
     /** Attribute Values */
     attrValue?: string;
+    /** Tabindex */
+    tabindex?: string | null;
+    /** Target */
+    target?: string;
 }
 
 /**
