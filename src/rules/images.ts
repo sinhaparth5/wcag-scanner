@@ -11,31 +11,33 @@ export default {
      * @param options Scanner options
      * @returns Promise<ScanResults> Results from image checks
      */
-  async check(document: Document, window: Window, options: ScannerOptions): Promise<ScanResults> {
-    const results: ScanResults = {
-      passes: [],
-      violations: [],
-      warnings: []
-    };
+    async check(document: Document, window: Window, options: ScannerOptions): Promise<ScanResults> {
+        const results: ScanResults = {
+        passes: [],
+        violations: [],
+        warnings: []
+        };
 
-    // Check <img> elements
-    checkImageElements(document, results);
-    
-    // Check <svg> elements
-    checkSvgElements(document, results);
-    
-    // Check background images
-    checkBackgroundImages(document, window, results);
-    
-    // Check image maps
-    checkImageMaps(document, results);
-    
-    return results;
-  }
+        // Check <img> elements
+        checkImageElements(document, results);
+        
+        // Check <svg> elements
+        checkSvgElements(document, results);
+        
+        // Check background images
+        checkBackgroundImages(document, window, results);
+        
+        // Check image maps
+        checkImageMaps(document, results);
+        
+        return results;
+    }
 };
 
 /**
  * Check all <img> elements for accessibility issues
+ * @param document DOM document
+ * @param results DOM results
  */
 function checkImageElements(document: Document, results: ScanResults): void {
   const images = document.querySelectorAll('img');
@@ -398,7 +400,7 @@ function isLikelyDecorativeImage(img: HTMLImageElement): boolean {
 
 /**
  * Check if alt text appears to be generic or placeholder text
- * 
+ * @param altText Alt text to check
  */
 function hasGenericAltText(altText: string): boolean {
   const genericTerms = ['image', 'picture', 'photo', 'img', 'graphic', 'icon', 'logo', 'photo.jpg', 'untitled'];
