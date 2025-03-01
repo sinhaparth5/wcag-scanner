@@ -36,6 +36,8 @@ export interface ElementInfo {
     coords?: string | null;
     /** Input checked status */
     href?: string | null;
+    /** Roles for ARIA label */
+    role?: string | null;
 }
 
 /**
