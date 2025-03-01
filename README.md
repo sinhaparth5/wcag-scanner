@@ -4,8 +4,7 @@
   <img src="/imgs/wcag-scanner-logo.png" alt="WCAG Scanner Logo" />
   
   [![npm version](https://img.shields.io/npm/v/wcag-scanner.svg)](https://www.npmjs.com/package/wcag-scanner)
-  [![Build Status](https://img.shields.io/github/actions/workflow/status/sinhaparth5/wcag-scanner/lint.yml?branch=main)](https://github.com/sinhaparth5/wcag-scanner/actions)
-  [![Build Status](https://img.shields.io/github/actions/workflow/status/sinhaparth5/wcag-scanner/typo-check.yml?branch=main)](https://github.com/sinhaparth5/wcag-scanner/actions)
+  [![Build Status](https://img.shields.io/github/actions/workflow/status/sinhaparth5/wcag-scanner/ci.yml?branch=main)](https://github.com/sinhaparth5/wcag-scanner/actions)
   [![codecov](https://codecov.io/gh/sinhaparth5/wcag-scanner/branch/main/graph/badge.svg)](https://codecov.io/gh/sinhaparth5/wcag-scanner)
   [![License](https://img.shields.io/npm/l/wcag-scanner.svg)](https://github.com/sinhaparth5/wcag-scanner/blob/main/LICENSE)
 </div>
