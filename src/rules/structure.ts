@@ -1,7 +1,7 @@
 import { ScannerOptions, ScanResults, ElementInfo } from '../types';
 
 /**
- * Main application functionality
+ * Check accessibility of structural elements (headings, landmarks, etc.)
  */
 export default {
     /**
