@@ -1,0 +1,37 @@
+name: TypeScript Lint
+
+on:
+    push:
+        branches: [ master, develop ]
+    pull_request:
+        branches: [ master, develop ]
+
+jobs:
+    lint:
+        name: Lint TypeScript
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: '20'
+                cache: 'npm'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Lint TypeScript files
+              run: npm run lint
+
+            - name: Check TypeScript compilation
+              run: npm run type-check
+
+            - name: Upload coverage reports to Codecav
+              uses: codecov/codecov-action@v5
+              with:
+                token: ${{ secrets.CODECOV_TOKEN }}
+                slug: sinhaparth5/wcag-scanner
