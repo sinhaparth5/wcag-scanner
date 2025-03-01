@@ -14,9 +14,7 @@
 
 WCAG Scanner is a powerful accessibility testing tool that helps developers identify and fix accessibility issues on their websites according to Web Content Accessibility Guidelines (WCAG). It performs automated checks against WCAG 2.1 standards and provides actionable recommendations to improve web accessibility.
 
-<div align="center">
-  ![Alt](https://repobeats.axiom.co/api/embed/ea9b7507716a27718ca4869364db5f69100a6bb1.svg "Repobeats analytics image")
-</div>
+![Alt](https://repobeats.axiom.co/api/embed/ea9b7507716a27718ca4869364db5f69100a6bb1.svg "Repobeats analytics image")
 
 ## ✨ Features
 
