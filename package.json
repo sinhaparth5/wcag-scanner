@@ -12,6 +12,9 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "bin": {
+    "wcag-scanner": "dist/bin/index.js"
+  },
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -49,6 +52,7 @@
   },
   "dependencies": {
     "color-diff": "^1.4.0",
+    "commander": "^13.1.0",
     "jsdom": "^26.0.0"
   }
 }
