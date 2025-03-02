@@ -40,3 +40,93 @@ npm i wcag-scanner
 ```bash
 yarn add wcag-scanner
 ```
+
+## How to use
+
+### Scan  a file
+```bash
+npx wcag-scanner file index.html --level AA --format console
+```
+
+### Scan a URL
+```bash
+npx wcag-scanner url https://example.com --format html --output report.html
+```
+
+### Implement with Express
+```JavaScript
+import express from 'express';
+import { middleware } from 'wcag-scanner';
+
+const app = express();
+
+// Add the WCAG scanner middleware
+app.use(middleware.express.createMiddleware({
+  enabled: true,
+  level: 'AA',
+  headerName: 'X-WCAG-Violations',
+  inlineReport: true,
+  onViolation: (results, req, res) => {
+    console.log(`Found ${results.violations.length} accessibility issues in ${req.path}`);
+  }
+}));
+
+// Your routes
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Test Page</title>
+      </head>
+      <body>
+        <h1>Hello World</h1>
+        <img src="logo.png"> <!-- Missing alt text will trigger violation -->
+      </body>
+    </html>
+  `);
+});
+
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});
+```
+
+### Create an API
+```JavaScript
+import { scanHtml, scanUrl, formatReport } from 'wcag-scanner';
+
+async function checkMyWebsite() {
+  try {
+    // Scan a URL
+    const results = await scanUrl('https://example.com', { level: 'AA' });
+    
+    console.log(`Found ${results.violations.length} accessibility issues`);
+    
+    // Generate a report
+    const htmlReport = formatReport(results, 'html');
+    
+    // Save the report
+    fs.writeFileSync('accessibility-report.html', htmlReport);
+  } catch (error) {
+    console.error('Error scanning website:', error);
+  }
+}
+
+async function checkHtmlString() {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Test</title>
+      </head>
+      <body>
+        <img src="logo.png"> <!-- Missing alt text -->
+      </body>
+    </html>
+  `;
+  
+  const results = await scanHtml(html);
+  console.log(formatReport(results, 'console'));
+}
+```
