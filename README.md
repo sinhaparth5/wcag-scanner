@@ -18,6 +18,8 @@ WCAG Scanner is a powerful accessibility testing tool that helps developers iden
 
 ![Alt](https://repobeats.axiom.co/api/embed/ea9b7507716a27718ca4869364db5f69100a6bb1.svg "Repobeats analytics image")
 
+<div align="center"><img src="https://codecov.io/gh/sinhaparth5/wcag-scanner/graphs/sunburst.svg?token=TOJOPXNYGV" alt="CodeCov Sunburst" /> </div>
+
 ## ✨ Features
 
 - **Comprehensive Accessibility Testing**: Scans websites against WCAG 2.1 A, AA, and AAA compliance levels
