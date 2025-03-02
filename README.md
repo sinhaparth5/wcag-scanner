@@ -42,18 +42,18 @@ yarn add wcag-scanner
 ```
 
 ## How to use
+### CLI Usage Example:
 
-### Scan  a file
 ```bash
+# Scan a file
 npx wcag-scanner file index.html --level AA --format console
-```
 
-### Scan a URL
-```bash
+# Scan a URL
 npx wcag-scanner url https://example.com --format html --output report.html
 ```
 
-### Implement with Express
+### Express Middleware Usage Example:
+
 ```JavaScript
 import express from 'express';
 import { middleware } from 'wcag-scanner';
@@ -92,7 +92,7 @@ app.listen(3000, () => {
 });
 ```
 
-### Create an API
+### Programmatic API Usage Example:
 ```JavaScript
 import { scanHtml, scanUrl, formatReport } from 'wcag-scanner';
 
