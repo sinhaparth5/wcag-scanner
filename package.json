@@ -1,6 +1,6 @@
 {
   "name": "wcag-scanner",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Scan HTML for WCAG accessibility violations with AI-powered fix suggestions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
