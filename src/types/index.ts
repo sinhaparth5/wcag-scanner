@@ -10,6 +10,8 @@ export interface ScannerOptions {
     ai?: boolean;
     /** Base URL for relative paths */
     baseUrl?: string;
+    /** Enable verbose output */
+    verbose?: boolean;
 }
 
 /**
