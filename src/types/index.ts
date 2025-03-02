@@ -12,6 +12,8 @@ export interface ScannerOptions {
     baseUrl?: string;
     /** Enable verbose output */
     verbose?: boolean;
+    /** Ignore JavaScript errors in scanned pages */
+    ignoreScriptErrors?: boolean;
 }
 
 /**
