@@ -33,10 +33,10 @@ WCAG Scanner is a powerful accessibility testing tool that helps developers iden
 ### Using npm
 
 ```bash
-npm install wcag-scanner --save-dev
+npm i wcag-scanner
 ```
 
 ### Using yarn
 ```bash
-yarn add wcag-scanner --dev
+yarn add wcag-scanner
 ```

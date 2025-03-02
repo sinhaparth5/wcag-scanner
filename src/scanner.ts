@@ -189,4 +189,15 @@ export class WCAGScanner {
     getResults(): ScanResults {
         return this.results;
     }
+
+    /**
+     * Update scanner options
+     * @param newOptions New options to apply
+     */
+    public updateOptions(newOptions: Partial<ScannerOptions>): void {
+        this.options = {
+            ...this.options,
+            ...newOptions
+        };
+    }
 }
