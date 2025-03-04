@@ -72,6 +72,18 @@ export interface ResultItem {
 }
 
 /**
+ * Fix suggestion for accessibility issues
+ */
+export interface FixSuggestion {
+    /** Corrected code snippet */
+    code: string;
+    /** Description of the fix */
+    description: string;
+    /** Explanation of the fix */
+    explanation?: string;
+}
+
+/**
  * Accessibility violation result
  */
 export interface Violation extends ResultItem {
@@ -84,11 +96,7 @@ export interface Violation extends ResultItem {
     /** Help URL */
     helpUrl?: string;
     /** Fix suggestion (will be populated by AI module) */
-    fix?: {
-        code?: string;
-        description: string;
-        explanation?: string;
-    };
+    fix?: FixSuggestion;
 }
 
 /**
