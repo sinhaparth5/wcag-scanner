@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * @TODO working on AI-powered suggestions, it's still working in progress.
+ */
+
 // Load environment variables from .env file
 dotenv.config();
 
