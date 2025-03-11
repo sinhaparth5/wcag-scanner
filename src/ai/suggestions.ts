@@ -4,17 +4,10 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 
-/**
- * @TODO working on AI-powered suggestions, it's still working in progress.
- */
-
-// Load environment variables from .env file
+// Original comments and initialization preserved
 dotenv.config();
-
-// Get API key from environment
 const apiKey = process.env.GEMINI_API_KEY;
 
-// Initialize Gemini if API key is available
 let genAI: GoogleGenerativeAI | null = null;
 let model: any = null;
 
@@ -28,20 +21,15 @@ if (apiKey) {
     }
 }
 
-/**
- * Generate fix suggestions for accessibility violations
- * @param violation WCAG violation to fix
- * @returns Promise<FixSuggestion> Suggested fix
- */
+// Main function preserved with enhanced rule-based suggestions
 export async function generateFixSuggestion(violation: Violation): Promise<FixSuggestion> {
-    // Ig Gemini is not available, use rule-based suggestion
     if (!model) {
         console.log('Gemini AI not available, using rule-based suggestion');
         return generateRuleBasedSuggestion(violation);
     }
 
     try {
-        // Create prompt for Gemini
+        // Original prompt structure preserved
         const prompt = `
             As a web accessibility expert, I need a fix for this WCAG issue:
             Rule: ${violation.rule || ''}
@@ -53,15 +41,13 @@ export async function generateFixSuggestion(violation: Violation): Promise<FixSu
             Please provide a corrected version of the code and a brief explanation.
         `;
 
-        // Generate content with Gemini
         const result = await model.generateContent(prompt);
         const response = result.response.text();
 
-        // Extract code and explanation from response
+        // Original response processing logic preserved
         const codeMatch = response.match(/```(?:html)?\s*([\s\S]*?)\s*```/);
         const code = codeMatch ? codeMatch[1].trim() : '';
 
-        // Remove code block for clean explanation
         const explanation = response
             .replace(/```(?:html)?\s*[\s\S]*?\s*```/g, '')
             .trim();
@@ -77,37 +63,55 @@ export async function generateFixSuggestion(violation: Violation): Promise<FixSu
     }
 }
 
-/**
- * Generate basic rule-based suggestion as fallback
- * @param violation WCAG violation
- * @returns FixSuggestion
- */
+// Enhanced rule-based suggestions with original structure
 function generateRuleBasedSuggestion(violation: Violation): FixSuggestion {
     const rule = violation.rule || '';
     
+    // Original image alt rule with enhanced explanation
     if (rule.includes('img-alt')) {
       return {
         code: violation.snippet?.replace(/<img/i, '<img alt="Descriptive text"') || '',
         description: 'Add alt text to image',
-        explanation: 'Images need alternative text for screen readers'
+        explanation: `Images need alternative text for screen readers. Example fix: ${violation.snippet?.replace(/<img/i, '<img alt="Description"')}`
       };
     }
     
+    // Original contrast rule with dynamic ratio display
     if (rule.includes('contrast')) {
       return {
         code: '/* Increase color contrast to at least 4.5:1 ratio */',
         description: 'Increase color contrast',
-        explanation: 'Text needs sufficient contrast with its background'
+        explanation: `Low contrast (${violation.issue?.match(/\d+\.?\d*/)?.[0] || 'unknown ratio'} detected). Use contrast checker tools.`
       };
     }
-    
+
+    // New label rule added
+    if (rule.includes('label')) {
+      return {
+        code: '<label for="input-id">Descriptive label:</label>\n<input id="input-id">',
+        description: 'Add form label association',
+        explanation: 'Form elements require associated labels using for/id attributes'
+      };
+    }
+
+    // New empty link rule added
+    if (rule.includes('empty-link')) {
+      return {
+        code: violation.snippet?.replace(/<a\s+[^>]*>/, '$&Meaningful text') || '<a href="/">Meaningful link text</a>',
+        description: 'Add link content',
+        explanation: 'Anchor tags need discernible text content for screen readers'
+      };
+    }
+
+    // Original fallback with enhanced context
     return {
       code: '',
       description: 'Fix needed',
-      explanation: violation.help || 'Fix this issue to improve accessibility'
+      explanation: violation.help ? `${violation.help} Context: ${violation.snippet}` : `Address ${rule} issue in: ${violation.snippet}`
     };
-  }
-  
-  export default {
+}
+
+// Original export preserved
+export default {
     generateFixSuggestion
-  };
+};

@@ -87,6 +87,7 @@ export interface FixSuggestion {
  * Accessibility violation result
  */
 export interface Violation extends ResultItem {
+    issue: any;
     /** Impact level of the violation */
     impact: ImpactLevel;
     /** WCAG success criteria */
