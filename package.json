@@ -1,6 +1,6 @@
 {
   "name": "wcag-scanner",
-  "version": "1.2.58",
+  "version": "1.2.59",
   "description": "Scan HTML for WCAG accessibility violations with AI-powered fix suggestions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,6 +58,7 @@
     "commander": "^13.1.0",
     "crypto": "^1.0.1",
     "express": "^4.21.2",
-    "jsdom": "^26.0.0"
+    "jsdom": "^26.0.0",
+    "wcag-scanner": "^1.2.59"
   }
 }
