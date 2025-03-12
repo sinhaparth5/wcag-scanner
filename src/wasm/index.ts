@@ -1,4 +1,4 @@
-import * as wasmModule from "../../scrapper/pkg";
+import * as wasmModule from "../pkg";
 /**
  * WASM based URL scraper using Rust
  */
@@ -13,7 +13,7 @@ export class WsamScraper {
         if (this.initialized) return;
 
         try {
-            this.wasmModule = await import("../../scrapper/pkg");
+            this.wasmModule = await import("../pkg");
             this.wasmModule.init_panic_hook();
             this.initialized = true;
             console.log("WASM scraper initialized successfully");
@@ -49,4 +49,4 @@ export class WsamScraper {
     }
 }
 
-export default new WsamScraper;
+export default new WsamScraper();

@@ -1,13 +1,14 @@
 {
   "name": "wcag-scanner",
-  "version": "1.2.59",
+  "version": "1.2.60",
   "description": "Scan HTML for WCAG accessibility violations with AI-powered fix suggestions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "dist/pkg"
   ],
   "engines": {
     "node": ">=16.0.0"
@@ -16,9 +17,13 @@
     "wcag-scanner": "dist/cli/index.js"
   },
   "scripts": {
+    "clean": "rimraf dist",
+    "build:ts": "tsc",
+    "build:wasm": "cd scrapper && wasm-pack build --target nodejs --out-dir ../src/pkg",
+    "copy:wasm": "mkdir -p dist/pkg && cp -r src/pkg/* dist/pkg/",
+    "build": "npm run clean && npm run build:wasm && npm run build:ts && npm run copy:wasm",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "build": "rimraf dist && tsc",
     "prepublishOnly": "npm run build",
     "lint": "eslint src/**/*.ts",
     "codecov": "codecov"
