@@ -8,6 +8,7 @@ import path from 'path';
 import http from 'http';
 import https from 'https';
 import { URL } from 'url';
+import { scanUrl as scanUrlWithWasm } from '..';
 
 // Try to load package.json for version information
 let version = '0.1.0'
@@ -76,6 +77,7 @@ program
   .option('-o, --output <file>', 'Save results to file')
   .option('-v, --verbose', 'Show verbose output')
   .option('-r, --rules <rules>', 'Comma-separated list of rules to check')
+  .option('--ai', 'Enable AI-powered fix suggestions')
   .action(async (urlString, options) => {
     try {
       // Add protocol if missing
@@ -86,30 +88,18 @@ program
       
       console.log(`Scanning URL: ${urlString}`);
       
-      // Fetch the URL content
-      let html;
-
-      try {
-        html = await fetchUrl(urlString);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error(`Error fetching URL: ${error.message}`);
-        } else {
-          console.error('Error scanning URL:', error);
-        }
-        console.log('Trying to continue with partial content...');
-        html = await fetchUrlWithFallback(urlString);
-      }
-      
+      // Create scanner options
       const scannerOptions: ScannerOptions = {
         level: options.level as 'A' | 'AA' | 'AAA',
         verbose: options.verbose || false,
         baseUrl: urlString,
         rules: options.rules ? options.rules.split(',') : undefined,
+        ai: options.ai || false,
         ignoreScriptErrors: true
       };
       
-      const results = await scanHtml(html, scannerOptions);
+      // Use the scanUrl function that uses WASM internally
+      const results = await scanUrlWithWasm(urlString, scannerOptions);
       
       // Generate report
       const report = formatReport(results, options.format, scannerOptions);

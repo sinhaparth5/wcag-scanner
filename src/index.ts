@@ -7,6 +7,8 @@ import path from 'path';
 import { URL } from 'url';
 import http from 'http';
 import https from 'https';
+import crypto from "crypto";
+import os from 'os';
 
 /**
  * Scan HTML string for WCAG violations
@@ -18,6 +20,20 @@ export async function scanHtml(html: string, options: ScannerOptions = {}): Prom
   const scanner = new WCAGScanner(options);
   await scanner.loadHTML(html);
   return scanner.scan();
+}
+
+/**
+ * Get WASM scraper instance 
+ */
+async function getWasmScraper() {
+  try {
+    const { default: wasmModule } = await import('./wasm');
+    await wasmModule.initialize();
+    return wasmModule;
+  } catch (error) {
+    console.error('Failed to load WASM scraper, falling back to HTTP requests:', error);
+    return null;
+  }
 }
 
 /**
@@ -36,24 +52,76 @@ export async function scanFile(filePath: string, options: ScannerOptions = {}): 
 }
 
 /**
- * Scan a URL for WCAG violations
- * @param urlString URL to scan
+ * Scan a URL for WCAG violations using Rust/WASM scraping
+ * @param url URL to scan
  * @param options Scanner options
- * @returns Promise<ScanResults> Scan results 
+ * @returns Promise<ScanResults> Scan results
  */
-export async function scanUrl(urlString: string, options: ScannerOptions = {}): Promise<ScanResults> {
-  // Add protocol if missing
-  if (!urlString.startsWith('http://') && !urlString.startsWith('https://')) {
-    urlString = 'https://' + urlString;
+export async function scanUrl(url: string, options: ScannerOptions = {}): Promise<ScanResults> {
+  console.log(`Scanning URL: ${url}`);
+  
+  // Create temp directory for saving content
+  const tempDir = path.join(os.tmpdir(), 'wcag-scanner-temp');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
   }
   
-  const html = await fetchUrl(urlString);
-  const scannerOptions = {
-    ...options,
-    baseUrl: urlString
-  };
+  // Generate unique file name
+  const fileId = crypto.createHash('md5').update(url + Date.now().toString()).digest('hex').substring(0, 10);
+  const tempFile = path.join(tempDir, `${fileId}.html`);
   
-  return scanHtml(html, scannerOptions);
+  try {
+    // Get the WASM scraper
+    const wasmScraper = await getWasmScraper();
+    
+    let html: string;
+    
+    if (wasmScraper) {
+      // Use WASM scraper
+      html = await wasmScraper.scrapeUrl(url);
+    } else {
+      // Fallback to simple HTTP request
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'WCAG-Scanner/1.0-js'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      
+      html = await response.text();
+    }
+    
+    if (!html || html.trim().length === 0) {
+      throw new Error('Scraper returned empty HTML content');
+    }
+    
+    console.log(`Successfully scraped ${html.length} bytes of HTML content`);
+    
+    // Save content to temp file
+    fs.writeFileSync(tempFile, html);
+    console.log(`Saved scraped content to ${tempFile}`);
+    
+    // If verbose logging is enabled, show a sample
+    if (options.verbose) {
+      console.log('First 200 characters of HTML:');
+      console.log(html.substring(0, 200) + '...');
+    }
+    
+    // Run the scanner on the HTML content
+    const scanner = new WCAGScanner({
+      ...options,
+      baseUrl: url
+    });
+    
+    await scanner.loadHTML(html, url);
+    return scanner.scan();
+  } catch (error) {
+    console.error('Error scanning URL:', error);
+    throw error;
+  }
 }
 
 /**
