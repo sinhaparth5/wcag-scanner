@@ -64,6 +64,6 @@
     "crypto": "^1.0.1",
     "express": "^4.21.2",
     "jsdom": "^26.0.0",
-    "wcag-scanner": "^1.2.59"
+    "wcag-scanner": "^1.2.60"
   }
 }
