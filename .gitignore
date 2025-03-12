@@ -133,3 +133,6 @@ dist
 # WASM 
 target
 pkg
+
+# test files
+report.html
