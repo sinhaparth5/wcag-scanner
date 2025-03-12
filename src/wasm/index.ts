@@ -1,4 +1,4 @@
-import * as wasmModule from "../../scrapper/pkg";
+import * as wasmModule from "./pkg";
 /**
  * WASM based URL scraper using Rust
  */
