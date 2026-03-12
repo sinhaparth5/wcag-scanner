@@ -87,6 +87,7 @@ export default {
             wcag: level === 'AAA' ? ['1.4.6'] : ['1.4.3'],
             help: `Text elements must have a contrast ratio of at least ${requiredRatio}:1`,
             fix: {
+                code: `color: ${textColor}; /* Adjust to achieve ${requiredRatio}:1 contrast ratio against background ${bgColor} */`,
                 description: `Increase the contrast between the text color (${textColor}) and background color (${bgColor})`,
                 explanation: `The current contrast ratio is ${contrastRatio.toFixed(2)}:1, but should be at least ${requiredRatio}:1`
             }
@@ -129,7 +130,7 @@ function isElementHidden(element: Element): boolean {
 function getBackgroundColor(element: Element, window: Window): string | null {
   let current = element;
   
-  while (current instanceof Element) {
+  while (current !== null && current.nodeType === 1) {
     const style = window.getComputedStyle(current);
     const backgroundColor = style.backgroundColor;
     

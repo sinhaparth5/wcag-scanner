@@ -4,9 +4,6 @@ import { generateReport, ReporterFormat } from './reporters';
 import middleware from './middleware';
 import fs from 'fs';
 import path from 'path';
-import { URL } from 'url';
-import http from 'http';
-import https from 'https';
 import crypto from "crypto";
 import os from 'os';
 
@@ -146,40 +143,6 @@ export function formatReport(
  */
 export function saveReport(report: string, filePath: string): void {
   fs.writeFileSync(filePath, report);
-}
-
-/**
- * Helper function to fetch URL content
- * @param urlString URL to fetch
- * @returns Promise<string> HTML content
- */
-async function fetchUrl(urlString: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = new URL(urlString);
-    const client = url.protocol === 'https:' ? https : http;
-    
-    const req = client.get(urlString, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`Request failed with status code ${res.statusCode}`));
-        return;
-      }
-      
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      res.on('end', () => {
-        resolve(data);
-      });
-    });
-    
-    req.on('error', (err) => {
-      reject(err);
-    });
-    
-    req.end();
-  });
 }
 
 // Export scanner class, types, and other modules

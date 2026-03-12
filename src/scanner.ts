@@ -108,13 +108,11 @@ export class WCAGScanner {
             // Skip if directory doesn't exist
             if (!fs.existsSync(rulesDir)) return;
 
-            // IMPORTANT FIX: Only load JavaScript files, explicitly exclude declaration files
+            // Load .js files (production/dist) or .ts files (ts-jest/dev), exclude declaration files
             const ruleFiles = fs.readdirSync(rulesDir)
                 .filter(file => {
-                    // Only include .js files that aren't declaration files
-                    return file.endsWith('.js') && 
-                           !file.endsWith('.d.js') && 
-                           !file.includes('.d.ts');
+                    if (file.endsWith('.d.ts') || file.endsWith('.d.js')) return false;
+                    return file.endsWith('.js') || file.endsWith('.ts');
                 });
             
             for (const file of ruleFiles) {

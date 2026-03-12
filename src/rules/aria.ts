@@ -112,11 +112,8 @@ function checkRequiredAriaAttributes(document: Document, results: ScanResults): 
     'combobox': ['aria-expanded', 'aria-controls'],
     'slider': ['aria-valuemin', 'aria-valuemax', 'aria-valuenow'],
     'scrollbar': ['aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-controls'],
-    'listbox': ['aria-expanded'],
-    'grid': ['aria-level', 'aria-multiselectable'],
     'progressbar': ['aria-valuemin', 'aria-valuemax', 'aria-valuenow'],
-    'spinbutton': ['aria-valuemin', 'aria-valuemax', 'aria-valuenow'],
-    'tablist': ['aria-orientation']
+    'spinbutton': ['aria-valuemin', 'aria-valuemax', 'aria-valuenow']
   };
   
   // Check elements with roles that require specific attributes
@@ -238,17 +235,17 @@ function checkAriaStatesProperties(document: Document, results: ScanResults): vo
  * @param results Scan results
  */
 function checkNativeSemantics(document: Document, results: ScanResults): void {
-  // Elements with inherent roles that shouldn't be overridden//-
-  const elementsWithNativeSemantics: { [key: string]: string[] } = {//-
-    'a': ['link'],//+
+  // Elements with inherent roles that shouldn't be overridden
+  const elementsWithNativeSemantics: { [key: string]: string[] } = {
+    'a': ['link'],
     'button': ['button'],
     'h1': ['heading'],
     'h2': ['heading'],
     'h3': ['heading'],
     'h4': ['heading'],
     'h5': ['heading'],
-    'h6': ['heading'],//-
-    'input': [],//+
+    'h6': ['heading'],
+    'input': [],
     'img': ['img'],
     'ul': ['list'],
     'ol': ['list'],
@@ -303,7 +300,7 @@ function checkNativeSemantics(document: Document, results: ScanResults): void {
         return;
       }
 
-      // Check other elements against their native semantics//-
+      // Check other elements against their native semantics
       if (role && elementsWithNativeSemantics[tagName].includes(role)) {
         const info: ElementInfo = {
           tagName: tagName,
@@ -343,16 +340,6 @@ function isRoleAllowedOnElement(tagName: string, role: string): boolean {
   
   if (role === 'link' && tagName === 'a') {
     return false; // a with href is already a link
-  }
-  
-  // Interactive roles are not allowed on non-interactive elements
-  const interactiveRoles = ['button', 'checkbox', 'link', 'menuitem', 'menuitemcheckbox', 
-                           'menuitemradio', 'option', 'radio', 'slider', 'tab'];
-                           
-  const nonInteractiveElements = ['div', 'span', 'p', 'section', 'article', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-  
-  if (interactiveRoles.includes(role) && nonInteractiveElements.includes(tagName)) {
-    return false; // non-interactive elements should not have interactive roles without additional attributes
   }
   
   // By default, assume role is allowed

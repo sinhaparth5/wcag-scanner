@@ -60,7 +60,7 @@ function checkInputLabels(document: Document, results: ScanResults): void {
         }
 
         // Check for accessibility name
-        const hasExplicitLabel = control.id && document.querySelector(`label[for="${control.id}]`);
+        const hasExplicitLabel = control.id && document.querySelector(`label[for="${control.id}"]`);
         const hasWrappingLabel = control.closest('label');
         const hasAriaLabel = control.hasAttribute('aria-label');
         const hasAriaLabelledby = control.hasAttribute('aria-labelledby');
