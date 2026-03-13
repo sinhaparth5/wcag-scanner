@@ -4,7 +4,7 @@ import { generateReport, ReporterFormat } from './reporters';
 import middleware from './middleware';
 import fs from 'fs';
 import path from 'path';
-import crypto from "crypto";
+import crypto from 'crypto';
 import os from 'os';
 
 /**

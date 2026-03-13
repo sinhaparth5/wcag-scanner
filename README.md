@@ -57,16 +57,6 @@ initWcagOverlay(); // shows a live WCAG inspector in the browser, dev only
 The overlay is automatically disabled in production (`NODE_ENV=production`) and never ships to your users.
 
 ## How to use
-### CLI Usage Example:
-
-```bash
-# Scan a file
-npx wcag-scanner file index.html --level AA --format console
-
-# Scan a URL
-npx wcag-scanner url https://example.com --format html --output report.html
-```
-
 ### Express Middleware Usage Example:
 
 ```JavaScript

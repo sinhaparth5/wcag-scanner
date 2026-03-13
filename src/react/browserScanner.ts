@@ -9,11 +9,14 @@ import keyboardRule from '../rules/keyboard';
 export interface AnnotatedViolation extends Violation {
   domElement?: Element;
   elementPath?: string;
+  /** Precise nth-child CSS selector — use for querySelector to find element */
+  elementSelector?: string;
 }
 
 export interface AnnotatedWarning extends Warning {
   domElement?: Element;
   elementPath?: string;
+  elementSelector?: string;
 }
 
 export interface BrowserScanResults {
@@ -52,15 +55,24 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
     }
   }
 
-  // Exclude any elements that live inside the WCAG overlay itself.
-  // Works whether mounted via initWcagOverlay() or <WcagDevOverlay /> JSX directly.
+  // Exclude elements that live inside the WCAG overlay itself
   const overlayRoot = document.querySelector('[data-wcag-overlay="true"]');
   const isInOverlay = (el: Element | null): boolean =>
     el != null && overlayRoot != null && overlayRoot.contains(el);
 
-  const annotate = <T extends Violation | Warning>(item: T): T & { domElement?: Element; elementPath?: string } => {
+  const annotate = <T extends Violation | Warning>(item: T): T & {
+    domElement?: Element;
+    elementPath?: string;
+    elementSelector?: string;
+  } => {
     const el = findElement(item, document);
-    return { ...item, domElement: el ?? undefined, elementPath: el ? getElementPath(el) : undefined };
+    if (!el) return { ...item };
+    return {
+      ...item,
+      domElement: el,
+      elementPath: getElementPath(el),
+      elementSelector: getNthChildSelector(el),
+    };
   };
 
   return {
@@ -71,7 +83,36 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
   };
 }
 
-/** Build a readable CSS-selector-style breadcrumb for an element. */
+/**
+ * Build a precise nth-child CSS selector path for an element.
+ * This is unambiguous and always finds the exact element.
+ */
+export function getNthChildSelector(el: Element): string {
+  const parts: string[] = [];
+  let current: Element | null = el;
+
+  while (current && current.nodeType === 1) {
+    const parent: Element | null = current.parentElement;
+    if (!parent) break;
+
+    // If element has a unique ID we can stop traversing early
+    const id = (current as HTMLElement).id;
+    if (id) {
+      parts.unshift(`#${CSS.escape(id)}`);
+      break;
+    }
+
+    const index = Array.from(parent.children).indexOf(current) + 1;
+    parts.unshift(`${current.tagName.toLowerCase()}:nth-child(${index})`);
+    current = parent;
+
+    if (parts.length >= 8) break;
+  }
+
+  return parts.join(' > ');
+}
+
+/** Build a human-readable breadcrumb label for an element. */
 export function getElementPath(el: Element): string {
   const parts: string[] = [];
   let current: Element | null = el;
@@ -82,7 +123,6 @@ export function getElementPath(el: Element): string {
     if (current.id) {
       part += `#${current.id}`;
     } else if (current.className && typeof current.className === 'string') {
-      // Skip auto-generated class names (hashed, uuid-like)
       const classes = current.className
         .trim()
         .split(/\s+/)
@@ -101,16 +141,19 @@ export function getElementPath(el: Element): string {
 function findElement(item: Violation | Warning, doc: Document): Element | null {
   const { element: info, snippet } = item;
 
+  // 1. ID — most reliable
   if (info?.id) {
     const el = doc.getElementById(info.id);
     if (el) return el;
   }
 
+  // 2. Snippet attribute matching
   if (snippet) {
     const el = findBySnippet(snippet, doc);
     if (el) return el;
   }
 
+  // 3. tagName + className
   if (info?.tagName) {
     try {
       const classes = info.className?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -118,7 +161,7 @@ function findElement(item: Violation | Warning, doc: Document): Element | null {
       const el = doc.querySelector(selector);
       if (el) return el;
     } catch {
-      // invalid selector
+      // invalid selector — skip
     }
   }
 
