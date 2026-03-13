@@ -52,8 +52,9 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
     }
   }
 
-  // Exclude any elements that live inside the WCAG overlay itself
-  const overlayRoot = document.querySelector('[data-wcag-overlay-root]');
+  // Exclude any elements that live inside the WCAG overlay itself.
+  // Works whether mounted via initWcagOverlay() or <WcagDevOverlay /> JSX directly.
+  const overlayRoot = document.querySelector('[data-wcag-overlay="true"]');
   const isInOverlay = (el: Element | null): boolean =>
     el != null && overlayRoot != null && overlayRoot.contains(el);
 

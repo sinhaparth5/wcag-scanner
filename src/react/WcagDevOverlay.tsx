@@ -213,10 +213,10 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
       setResults(res);
       setLastScan(new Date());
     } finally {
+      // Set cooldown BEFORE clearing scanningRef so the observer gap is covered
+      cooldownRef.current = true;
       scanningRef.current = false;
       setScanning(false);
-      // Cooldown prevents the observer from immediately re-triggering after scan
-      cooldownRef.current = true;
       setTimeout(() => { cooldownRef.current = false; }, 1200);
     }
   }, [level, rules]);
