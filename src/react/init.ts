@@ -34,15 +34,20 @@ export function initWcagOverlay(options: WcagDevOverlayProps = {}): void {
       import('react-dom'),
       import('./WcagDevOverlay'),
     ]).then(([React, ReactDOM, { WcagDevOverlay }]) => {
-      const el = React.createElement(WcagDevOverlay, options as React.ComponentProps<typeof WcagDevOverlay>);
+      const ReactAny = React as any;
+      const r = ReactAny.default ?? ReactAny;
+      const el = r.createElement(WcagDevOverlay, options as React.ComponentProps<typeof WcagDevOverlay>);
+
+      // Vite/ESM may wrap the module under .default
+      const rdAny = ReactDOM as any;
+      const rd = rdAny.default ?? rdAny;
 
       // React 18: createRoot
-      const rdAny = ReactDOM as any;
-      if (rdAny.createRoot) {
-        rdAny.createRoot(container).render(el);
+      if (rd.createRoot) {
+        rd.createRoot(container).render(el);
       } else {
         // React 17 fallback
-        rdAny.render(el, container);
+        rd.render(el, container);
       }
     }).catch((err: unknown) => {
       console.warn('[wcag-scanner] Failed to mount overlay:', err);
