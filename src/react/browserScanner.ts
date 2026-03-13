@@ -52,14 +52,19 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
     }
   }
 
+  // Exclude any elements that live inside the WCAG overlay itself
+  const overlayRoot = document.querySelector('[data-wcag-overlay-root]');
+  const isInOverlay = (el: Element | null): boolean =>
+    el != null && overlayRoot != null && overlayRoot.contains(el);
+
   const annotate = <T extends Violation | Warning>(item: T): T & { domElement?: Element; elementPath?: string } => {
     const el = findElement(item, document);
     return { ...item, domElement: el ?? undefined, elementPath: el ? getElementPath(el) : undefined };
   };
 
   return {
-    violations: violations.map(annotate),
-    warnings: warnings.map(annotate),
+    violations: violations.map(annotate).filter(v => !isInOverlay(v.domElement ?? null)),
+    warnings:   warnings.map(annotate).filter(w => !isInOverlay(w.domElement ?? null)),
     passes,
     duration: Math.round(performance.now() - start),
   };
