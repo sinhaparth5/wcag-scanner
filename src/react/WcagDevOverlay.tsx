@@ -341,15 +341,31 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
   }, [open]);
 
   // ── Scan ────────────────────────────────────────────────────────────────
+  const scanningRef = useRef(false);
+
   const scan = useCallback(async () => {
+    if (scanningRef.current) return;
+    scanningRef.current = true;
     setScanning(true);
+    // Pause observer while scanning to prevent scan-triggered mutations causing rescans
+    observerRef.current?.disconnect();
     try {
       const opts: ScannerOptions = { level, rules };
       const res = await scanBrowserPage(opts);
       setResults(res);
       setLastScan(new Date());
     } finally {
+      scanningRef.current = false;
       setScanning(false);
+      // Reconnect observer after scan settles
+      if (observerRef.current) {
+        observerRef.current.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class', 'hidden', 'aria-hidden', 'role', 'alt', 'src', 'href'],
+        });
+      }
     }
   }, [level, rules]);
 
@@ -371,7 +387,9 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'style', 'hidden', 'aria-hidden', 'role', 'alt', 'src', 'href'],
+      // 'style' intentionally excluded — our highlight helper modifies inline styles
+      // on page elements which would cause an infinite rescan loop
+      attributeFilter: ['class', 'hidden', 'aria-hidden', 'role', 'alt', 'src', 'href'],
     });
 
     return () => {
@@ -530,13 +548,11 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
     fontSize: 13,
     fontWeight: active ? 600 : 400,
     color: active ? '#7c3aed' : '#64748b',
-    borderBottom: active ? '2px solid #7c3aed' : '2px solid transparent',
     cursor: 'pointer',
     background: 'none',
     border: 'none',
-    borderBottomColor: active ? '#7c3aed' : 'transparent',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: 2,
+    // Use inset box-shadow instead of borderBottom to avoid shorthand/longhand conflict
+    boxShadow: active ? 'inset 0 -2px 0 #7c3aed' : 'none',
     whiteSpace: 'nowrap',
   });
 
