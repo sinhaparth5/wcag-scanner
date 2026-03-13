@@ -32,16 +32,29 @@ WCAG Scanner is a powerful accessibility testing tool that helps developers iden
 
 ## 📦 Installation
 
-### Using npm
-
 ```bash
-npm i wcag-scanner
-```
+# npm
+npm install wcag-scanner
 
-### Using yarn
-```bash
+# yarn
 yarn add wcag-scanner
+
+# pnpm
+pnpm add wcag-scanner
 ```
+
+> **React users:** React and React DOM are peer dependencies and are already installed in your project — no extra steps needed.
+
+### For the React Dev Overlay
+
+Add one line to your app entry point (`main.ts`, `index.js`, `App.tsx`, etc.):
+
+```ts
+import { initWcagOverlay } from 'wcag-scanner/react';
+initWcagOverlay(); // shows a live WCAG inspector in the browser, dev only
+```
+
+The overlay is automatically disabled in production (`NODE_ENV=production`) and never ships to your users.
 
 ## How to use
 ### CLI Usage Example:

@@ -2,6 +2,8 @@
   "compilerOptions": {
     "target": "ES2018",
     "module": "commonjs",
+    "jsx": "react-jsx",
+    "lib": ["ES2018", "DOM", "DOM.Iterable"],
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",

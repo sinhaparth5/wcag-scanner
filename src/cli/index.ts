@@ -5,9 +5,6 @@ import { scanFile, scanHtml, formatReport, saveReport } from '..';
 import { ScannerOptions } from '..';
 import fs from 'fs';
 import path from 'path';
-import http from 'http';
-import https from 'https';
-import { URL } from 'url';
 import { scanUrl as scanUrlWithWasm } from '..';
 
 // Try to load package.json for version information
@@ -175,36 +172,6 @@ program
     }
   });
 
-// Helper function to fetch URL content
-async function fetchUrl(urlString: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = new URL(urlString);
-    const client = url.protocol === 'https:' ? https : http;
-    
-    const req = client.get(urlString, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`Request failed with status code ${res.statusCode}`));
-        return;
-      }
-      
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      res.on('end', () => {
-        resolve(data);
-      });
-    });
-    
-    req.on('error', (err) => {
-      reject(err);
-    });
-    
-    req.end();
-  });
-}
-
 // If no arguments provided, show help
 if (process.argv.length <= 2) {
   program.help();
@@ -212,48 +179,3 @@ if (process.argv.length <= 2) {
 
 // Parse command line arguments
 program.parse(process.argv);
-
-/**
- * Fallback function to fetch a URL when the primary method fails
- * @param urlString The URL to fetch
- * @returns Promise<string> HTML content
- */
-async function fetchUrlWithFallback(urlString: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    try {
-      // Use a simpler approach that ignores some errors
-      const url = new URL(urlString);
-      const options = {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (WCAG Scanner Bot) Chrome/91.0.4472.124'
-        },
-        timeout: 10000
-      };
-      
-      const client = url.protocol === 'https:' ? https : http;
-      const req = client.request(url, options, (res) => {
-        let data = '';
-        
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        
-        res.on('end', () => {
-          // Return whatever we got, even if status code isn't 200
-          resolve(data || '<html><body><p>Failed to fetch content</p></body></html>');
-        });
-      });
-      
-      req.on('error', () => {
-        // Provide minimal HTML if we can't fetch anything
-        resolve('<html><body><p>Failed to fetch content</p></body></html>');
-      });
-      
-      req.end();
-    } catch (error) {
-      // Return minimal HTML on any error
-      resolve('<html><body><p>Failed to fetch content</p></body></html>');
-    }
-  });
-}
