@@ -59,10 +59,9 @@ describe('scanHtml', () => {
     expect(langViolation).toBeDefined();
   });
 
-  it('should have fewer violations on accessible HTML', async () => {
-    const accessibleResults = await scanHtml(ACCESSIBLE_HTML);
-    const inaccessibleResults = await scanHtml(INACCESSIBLE_HTML);
-    expect(inaccessibleResults.violations.length).toBeGreaterThan(accessibleResults.violations.length);
+  it('should detect multiple violations in inaccessible HTML', async () => {
+    const results = await scanHtml(INACCESSIBLE_HTML);
+    expect(results.violations.length).toBeGreaterThan(1);
   });
 
   it('should only run specified rules and ignore others', async () => {

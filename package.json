@@ -10,7 +10,6 @@
   },
   "files": [
     "dist",
-    "scrapper/pkg",
     "README.md",
     "LICENSE"
   ],
@@ -20,8 +19,7 @@
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "build:wasm": "wasm-pack build scrapper --target nodejs",
-    "build": "npm run build:wasm && rimraf dist && tsc",
+    "build": "rimraf dist && tsc",
     "prepublishOnly": "npm run build",
     "lint": "eslint src/**/*.ts",
     "codecov": "codecov"

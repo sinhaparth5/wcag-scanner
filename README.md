@@ -22,13 +22,13 @@ WCAG Scanner is a powerful accessibility testing tool that helps developers iden
 
 ## ✨ Features
 
-- **Comprehensive Accessibility Testing**: Scans websites against WCAG 2.1 A, AA, and AAA compliance levels
-- **Detailed Reports**: Generates comprehensive reports highlighting issues with severity ratings
-- **Actionable Recommendations**: Provides specific guidance on how to fix identified issues
-- **Integration with Development Workflows**: CI/CD integration via GitHub Actions, GitLab CI, etc.
-- **Custom Rule Configuration**: Tailor scanning criteria to your project's specific needs
-- **Interactive Dashboard**: Visual representation of accessibility issues with filtering capabilities
-- **Performance Optimization**: Minimal impact on development and build processes
+- **WCAG 2.1 Compliance Scanning**: Checks against A, AA, and AAA conformance levels
+- **6 Built-in Rules**: Images, contrast, forms, ARIA, structure, and keyboard accessibility
+- **React Dev Overlay**: Live in-browser inspector with element highlighting, pinning, and impact filtering
+- **AI Fix Suggestions**: Paste your Gemini API key in the overlay settings to get instant fix suggestions per violation
+- **Programmatic API**: Scan HTML strings or local files from Node.js
+- **Express Middleware**: Auto-scan responses in your Express app
+- **Multiple Report Formats**: JSON, HTML, and console output
 
 ## 📦 Installation
 
@@ -43,95 +43,82 @@ yarn add wcag-scanner
 pnpm add wcag-scanner
 ```
 
-> **React users:** React and React DOM are peer dependencies and are already installed in your project — no extra steps needed.
+> **React users:** React and React DOM are peer dependencies already in your project — no extra install needed.
 
-### For the React Dev Overlay
+## 🖥️ React Dev Overlay
 
-Add one line to your app entry point (`main.ts`, `index.js`, `App.tsx`, etc.):
+The easiest way to use wcag-scanner in a React app. Add **one line** to your entry file and a live accessibility inspector appears in the corner of your browser during development.
 
 ```ts
+// main.ts / main.jsx / index.tsx — works with any file type
 import { initWcagOverlay } from 'wcag-scanner/react';
-initWcagOverlay(); // shows a live WCAG inspector in the browser, dev only
+
+initWcagOverlay(); // auto-disabled in production
 ```
 
-The overlay is automatically disabled in production (`NODE_ENV=production`) and never ships to your users.
+**Options:**
+```ts
+initWcagOverlay({
+  level:    'AA',           // 'A' | 'AA' | 'AAA' — default: 'AA'
+  position: 'bottom-right', // 'bottom-right' | 'bottom-left'
+  debounce: 750,            // ms to wait after DOM change before rescanning
+  rules:    ['images', 'contrast'], // run a subset of rules only
+});
+```
 
-## How to use
-### Express Middleware Usage Example:
+**Features:**
+- Hover over a violation to highlight the element on the page
+- Click to pin the highlight; click again to unpin
+- Expand any violation card for the HTML snippet, element path, WCAG criteria, and fix hint
+- Filter by impact level (critical / serious / moderate / minor)
+- Drag the panel anywhere on screen
+- Keyboard shortcut `Alt+Shift+W` to toggle open/close
+- **⚙ Settings** — paste a free Google Gemini API key to get AI-powered fix suggestions per violation
 
-```JavaScript
+> The overlay never runs in production (`NODE_ENV=production`) and is never included in your production bundle.
+
+## 🔧 Programmatic API
+
+Scan HTML strings or local files from Node.js scripts, CI pipelines, or build tools.
+
+```js
+import { scanHtml, scanFile, formatReport, saveReport } from 'wcag-scanner';
+
+// Scan an HTML string
+const results = await scanHtml('<img src="logo.png">', { level: 'AA' });
+console.log(`${results.violations.length} violations found`);
+
+// Scan a local HTML file
+const results = await scanFile('./public/index.html', { level: 'AA' });
+
+// Generate and save a report
+const html = formatReport(results, 'html');   // 'html' | 'json' | 'console'
+saveReport(html, 'accessibility-report.html');
+```
+
+## 🌐 Express Middleware
+
+Automatically scan every HTML response in your Express app and inject a violation badge.
+
+```js
 import express from 'express';
 import { middleware } from 'wcag-scanner';
 
 const app = express();
 
-// Add the WCAG scanner middleware
 app.use(middleware.express.createMiddleware({
-  enabled: true,
-  level: 'AA',
-  headerName: 'X-WCAG-Violations',
-  inlineReport: true,
-  onViolation: (results, req, res) => {
-    console.log(`Found ${results.violations.length} accessibility issues in ${req.path}`);
-  }
+  enabled:      true,
+  level:        'AA',
+  headerName:   'X-WCAG-Violations', // violation count added to response headers
+  inlineReport: true,                // inject a small widget into the HTML response
+  onViolation: (results, req) => {
+    console.log(`${results.violations.length} issues on ${req.path}`);
+  },
 }));
 
-// Your routes
 app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Test Page</title>
-      </head>
-      <body>
-        <h1>Hello World</h1>
-        <img src="logo.png"> <!-- Missing alt text will trigger violation -->
-      </body>
-    </html>
-  `);
+  res.send(`<!DOCTYPE html><html><body><h1>Hello</h1></body></html>`);
 });
 
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
-});
-```
-
-### Programmatic API Usage Example:
-```JavaScript
-import { scanHtml, scanUrl, formatReport } from 'wcag-scanner';
-
-async function checkMyWebsite() {
-  try {
-    // Scan a URL
-    const results = await scanUrl('https://example.com', { level: 'AA' });
-    
-    console.log(`Found ${results.violations.length} accessibility issues`);
-    
-    // Generate a report
-    const htmlReport = formatReport(results, 'html');
-    
-    // Save the report
-    fs.writeFileSync('accessibility-report.html', htmlReport);
-  } catch (error) {
-    console.error('Error scanning website:', error);
-  }
-}
-
-async function checkHtmlString() {
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Test</title>
-      </head>
-      <body>
-        <img src="logo.png"> <!-- Missing alt text -->
-      </body>
-    </html>
-  `;
-  
-  const results = await scanHtml(html);
-  console.log(formatReport(results, 'console'));
-}
+app.listen(3000);
 ```
