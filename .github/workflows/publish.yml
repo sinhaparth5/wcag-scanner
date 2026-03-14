@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Release & Publish
 
 on:
   push:
@@ -6,12 +6,60 @@ on:
       - 'v*'
 
 jobs:
-  publish:
+  # ── 1. Test & Build ──────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # ── 2. Create GitHub Release ─────────────────────────────────────────────────
+  release:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # ── 3. Publish to GitHub Packages ────────────────────────────────────────────
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,27 +71,19 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           cache: 'npm'
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Scope package name for GitHub Packages
         run: npm pkg set name="@sinhaparth5/wcag-scanner"
 
-      - name: Publish
+      - name: Publish to GitHub Packages
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
