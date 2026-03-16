@@ -89,4 +89,22 @@ describe('Images Rule', () => {
     const pass = results.passes.find(p => p.rule === 'img-alt-decorative');
     expect(pass).toBeDefined();
   });
+
+  it('should not include background image warnings in the images rule', async () => {
+    const html = `
+      <html>
+        <body>
+          <div style="background-image:url('hero.jpg')"></div>
+        </body>
+      </html>
+    `;
+
+    const document = createDocument(html);
+    const window = createWindow(html);
+
+    const results = await imagesRule.check(document, window, { level: 'AA' });
+
+    const warning = results.warnings.find(w => w.rule === 'background-image');
+    expect(warning).toBeUndefined();
+  });
 });

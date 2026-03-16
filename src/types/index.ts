@@ -1,9 +1,13 @@
+export type RulePreset = 'fast' | 'full';
+
 /**
  * Scanner configuration options
  */
 export interface ScannerOptions {
     /** WCAG level to check against (A, AA or AAA) */
     level?: 'A' | 'AA' | 'AAA';
+    /** Built-in rule preset */
+    preset?: RulePreset;
     /** Specific rules to check */
     rules?: string[];
     /** Enable AI-powered suggestions */

@@ -78,6 +78,29 @@ describe('WCAGScanner', () => {
   });
 
   describe('rules', () => {
+    it('should include optional rules when preset is full', async () => {
+      const scanner = new WCAGScanner({ preset: 'full' });
+      await scanner.loadHTML('<html><body><div style="background-image:url(hero.jpg)"></div></body></html>');
+
+      scanner.registerRule('backgroundImages', {
+        check: async () => {
+          return {
+            passes: [],
+            violations: [],
+            warnings: [{
+              rule: 'background-image',
+              impact: 'moderate',
+              description: 'Background image rule ran',
+              element: { tagName: 'div' }
+            }]
+          };
+        }
+      });
+
+      const results = await scanner.scan();
+      expect(results.warnings.some(result => result.rule === 'background-image')).toBe(true);
+    });
+
     it('should run the built-in default structure rule name', async () => {
       const scanner = new WCAGScanner();
       await scanner.loadHTML('<html><body><h1>Test</h1></body></html>');

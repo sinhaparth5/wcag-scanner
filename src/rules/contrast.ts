@@ -18,6 +18,8 @@ export default {
         violations: [],
         warnings: []
         };
+        const backgroundColorCache = new WeakMap<Element, string>();
+        const parsedColorCache = new Map<string, { r: number; g: number; b: number } | null>();
 
         // Minimum contrast requirements by WCAG level
         const contrastRequirements = {
@@ -45,14 +47,17 @@ export default {
 
         for (const element of textElements) {
         // Skip empty or hidden elements
-        if (!element.textContent?.trim() || isElementHidden(element, window)) {
+        if (!element.textContent?.trim()) {
             continue;
         }
 
-        // Get computed styles
         const style = window.getComputedStyle(element);
+        if (isElementHidden(element, style)) {
+            continue;
+        }
+
         const textColor = style.color;
-        const bgColor = getBackgroundColor(element, window);
+        const bgColor = getBackgroundColor(element, window, backgroundColorCache);
         
         // Skip if we couldn't determine colors
         if (!textColor || !bgColor) {
@@ -68,7 +73,7 @@ export default {
         const requiredRatio = isLargeText ? requirements.largeText : requirements.normalText;
 
         // Calculate contrast ratio
-        const contrastRatio = calculateContrastRatio(textColor, bgColor);
+        const contrastRatio = calculateContrastRatio(textColor, bgColor, parsedColorCache);
         
         const info: ElementInfo = {
             tagName: element.tagName.toLowerCase(),
@@ -109,17 +114,12 @@ export default {
  * Check if an element is hidden
  * @param element Element to check
  */
-function isElementHidden(element: Element, window: Window): boolean {
+function isElementHidden(element: Element, style: CSSStyleDeclaration): boolean {
   if (element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true') {
     return true;
   }
   
-  try {
-    const style = window.getComputedStyle(element);
-    return style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
-  } catch (e) {
-    return false;
-  }
+  return style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
 }
 
 function isBoldWeight(fontWeight: string): boolean {
@@ -133,14 +133,29 @@ function isBoldWeight(fontWeight: string): boolean {
  * @param element Element to check
  * @param window Browser window
  */
-function getBackgroundColor(element: Element, window: Window): string | null {
+function getBackgroundColor(
+  element: Element,
+  window: Window,
+  cache: WeakMap<Element, string>,
+): string | null {
+  const cached = cache.get(element);
+  if (cached) return cached;
+
   let current = element;
   
   while (current !== null && current.nodeType === 1) {
+    const cachedCurrent = cache.get(current);
+    if (cachedCurrent) {
+      cache.set(element, cachedCurrent);
+      return cachedCurrent;
+    }
+
     const style = window.getComputedStyle(current);
     const backgroundColor = style.backgroundColor;
     
     if (backgroundColor && backgroundColor !== 'transparent' && backgroundColor !== 'rgba(0, 0, 0, 0)') {
+      cache.set(current, backgroundColor);
+      cache.set(element, backgroundColor);
       return backgroundColor;
     }
     
@@ -148,6 +163,7 @@ function getBackgroundColor(element: Element, window: Window): string | null {
   }
   
   // If we couldn't find a background color, default to white
+  cache.set(element, 'rgb(255, 255, 255)');
   return 'rgb(255, 255, 255)';
 }
 
@@ -156,9 +172,13 @@ function getBackgroundColor(element: Element, window: Window): string | null {
  * @param foreground Foreground color
  * @param background Background color
  */
-function calculateContrastRatio(foreground: string, background: string): number {
-  const fgRgb = parseColor(foreground);
-  const bgRgb = parseColor(background);
+function calculateContrastRatio(
+  foreground: string,
+  background: string,
+  cache: Map<string, { r: number; g: number; b: number } | null>,
+): number {
+  const fgRgb = parseColor(foreground, cache);
+  const bgRgb = parseColor(background, cache);
   
   if (!fgRgb || !bgRgb) {
     return 0;
@@ -177,45 +197,59 @@ function calculateContrastRatio(foreground: string, background: string): number 
  * Parse color string to RGB values
  * @param color Color string
  */
-function parseColor(color: string): { r: number; g: number; b: number } | null {
+function parseColor(
+  color: string,
+  cache: Map<string, { r: number; g: number; b: number } | null>,
+): { r: number; g: number; b: number } | null {
+  const cached = cache.get(color);
+  if (cached !== undefined) return cached;
+
   // Handle 'rgb(r, g, b)' format
   let match = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
   if (match) {
-    return {
+    const parsed = {
       r: parseInt(match[1]),
       g: parseInt(match[2]),
       b: parseInt(match[3])
     };
+    cache.set(color, parsed);
+    return parsed;
   }
   
   // Handle 'rgba(r, g, b, a)' format
   match = color.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
   if (match) {
-    return {
+    const parsed = {
       r: parseInt(match[1]),
       g: parseInt(match[2]),
       b: parseInt(match[3])
     };
+    cache.set(color, parsed);
+    return parsed;
   }
   
   // Handle hex format (#RRGGBB)
   match = color.match(/#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
   if (match) {
-    return {
+    const parsed = {
       r: parseInt(match[1], 16),
       g: parseInt(match[2], 16),
       b: parseInt(match[3], 16)
     };
+    cache.set(color, parsed);
+    return parsed;
   }
   
   // Handle shorthand hex format (#RGB)
   match = color.match(/#([0-9a-f])([0-9a-f])([0-9a-f])/i);
   if (match) {
-    return {
+    const parsed = {
       r: parseInt(match[1] + match[1], 16),
       g: parseInt(match[2] + match[2], 16),
       b: parseInt(match[3] + match[3], 16)
     };
+    cache.set(color, parsed);
+    return parsed;
   }
   
   // Handle common color names
@@ -230,9 +264,12 @@ function parseColor(color: string): { r: number; g: number; b: number } | null {
   };
   
   if (colorNames[color.toLowerCase()]) {
-    return colorNames[color.toLowerCase()];
+    const parsed = colorNames[color.toLowerCase()];
+    cache.set(color, parsed);
+    return parsed;
   }
   
+  cache.set(color, null);
   return null;
 }
 

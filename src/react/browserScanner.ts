@@ -1,10 +1,12 @@
 import { ScannerOptions, ScanResults, Violation, Warning, Pass } from '../types';
 import imagesRule from '../rules/images';
+import backgroundImagesRule from '../rules/backgroundImages';
 import contrastRule from '../rules/contrast';
 import formsRule from '../rules/forms';
 import ariaRule from '../rules/aria';
 import structureRule from '../rules/structure';
 import keyboardRule from '../rules/keyboard';
+import { FAST_RULES, resolveRuleNames } from '../rules/presets';
 
 export interface AnnotatedViolation extends Violation {
   domElement?: Element;
@@ -28,6 +30,7 @@ export interface BrowserScanResults {
 
 const RULES: Record<string, { check: (d: Document, w: Window, o: ScannerOptions) => Promise<ScanResults> }> = {
   images: imagesRule,
+  backgroundImages: backgroundImagesRule,
   contrast: contrastRule,
   forms: formsRule,
   aria: ariaRule,
@@ -37,7 +40,7 @@ const RULES: Record<string, { check: (d: Document, w: Window, o: ScannerOptions)
 
 export async function scanBrowserPage(options: ScannerOptions = {}): Promise<BrowserScanResults> {
   const start = performance.now();
-  const ruleNames = options.rules || Object.keys(RULES);
+  const ruleNames = resolveRuleNames(options, FAST_RULES);
   const violations: Violation[] = [];
   const warnings: Warning[] = [];
   const passes: Pass[] = [];

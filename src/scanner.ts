@@ -2,8 +2,7 @@ import { JSDOM } from "jsdom";
 import { ScannerOptions, ScanResults, Rule } from "./types";
 import fs from "fs";
 import path from "path";
-
-const DEFAULT_RULES = ['images', 'contrast', 'forms', 'aria', 'structure', 'keyboard'];
+import { FAST_RULES, resolveRuleNames } from './rules/presets';
 
 /**
  * Main WCAG Scanner class
@@ -22,7 +21,7 @@ export class WCAGScanner {
      */
     constructor(options: ScannerOptions = {}) {
         this.options = {
-            rules: DEFAULT_RULES,
+            preset: 'fast',
             level: 'AA',
             ai: true,
             ...options
@@ -107,6 +106,7 @@ export class WCAGScanner {
             const ruleFiles = fs.readdirSync(rulesDir)
                 .filter(file => {
                     if (file.endsWith('.d.ts') || file.endsWith('.d.js')) return false;
+                    if (path.basename(file, path.extname(file)) === 'presets') return false;
                     return file.endsWith('.js') || file.endsWith('.ts');
                 });
             
@@ -155,7 +155,7 @@ export class WCAGScanner {
         }
 
         // Run each enabled rule
-        const enabledRules = this.options.rules || [];
+        const enabledRules = resolveRuleNames(this.options, FAST_RULES);
         for (const ruleName of enabledRules) {
             const rule = this.rules.get(ruleName);
             if (rule) {

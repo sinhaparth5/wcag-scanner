@@ -23,7 +23,7 @@ WCAG Scanner is a powerful accessibility testing tool that helps developers iden
 ## ✨ Features
 
 - **WCAG 2.1 Compliance Scanning**: Checks against A, AA, and AAA conformance levels
-- **6 Built-in Rules**: Images, contrast, forms, ARIA, structure, and keyboard accessibility
+- **Fast and Full Presets**: Default fast scans plus optional heavier rules like `backgroundImages`
 - **React Dev Overlay**: Live in-browser inspector with element highlighting, pinning, and impact filtering
 - **AI Fix Suggestions**: Paste your Gemini API key in the overlay settings to get instant fix suggestions per violation
 - **Programmatic API**: Scan HTML strings or local files from Node.js
@@ -60,11 +60,14 @@ initWcagOverlay(); // auto-disabled in production
 ```ts
 initWcagOverlay({
   level:    'AA',           // 'A' | 'AA' | 'AAA' — default: 'AA'
+  preset:   'fast',         // 'fast' | 'full' — default: 'fast'
   position: 'bottom-right', // 'bottom-right' | 'bottom-left'
   debounce: 750,            // ms to wait after DOM change before rescanning
-  rules:    ['images', 'contrast'], // run a subset of rules only
+  rules:    ['images', 'backgroundImages', 'contrast'], // explicit rules override preset
 });
 ```
+
+`preset: 'full'` includes the heavier optional checks such as `backgroundImages`. Use `rules` when you want an exact rule list.
 
 **Features:**
 - Hover over a violation to highlight the element on the page
@@ -85,11 +88,16 @@ Scan HTML strings or local files from Node.js scripts, CI pipelines, or build to
 import { scanHtml, scanFile, formatReport, saveReport } from 'wcag-scanner';
 
 // Scan an HTML string
-const results = await scanHtml('<img src="logo.png">', { level: 'AA' });
+const results = await scanHtml('<img src="logo.png">', { level: 'AA', preset: 'fast' });
 console.log(`${results.violations.length} violations found`);
 
 // Scan a local HTML file
-const results = await scanFile('./public/index.html', { level: 'AA' });
+const results = await scanFile('./public/index.html', { level: 'AA', preset: 'full' });
+
+// Run an exact subset of rules
+const targeted = await scanHtml('<div style="background-image:url(hero.jpg)"></div>', {
+  rules: ['images', 'backgroundImages'],
+});
 
 // Generate and save a report
 const html = formatReport(results, 'html');   // 'html' | 'json' | 'console'
@@ -109,6 +117,7 @@ const app = express();
 app.use(middleware.express.createMiddleware({
   enabled:      true,
   level:        'AA',
+  preset:       'fast',
   headerName:   'X-WCAG-Violations', // violation count added to response headers
   inlineReport: true,                // inject a small widget into the HTML response
   onViolation: (results, req) => {

@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { scanBrowserPage, BrowserScanResults, AnnotatedViolation, AnnotatedWarning } from './browserScanner';
 import { getAiSuggestion, getStoredApiKey, setStoredApiKey, AiSuggestion } from './gemini';
-import { ScannerOptions } from '../types';
+import { RulePreset, ScannerOptions } from '../types';
 
 type Tab    = 'violations' | 'warnings';
 type View   = 'list' | 'settings';
@@ -15,6 +15,7 @@ type Impact = 'all' | 'critical' | 'serious' | 'moderate' | 'minor';
 
 export interface WcagDevOverlayProps {
   level?:    'A' | 'AA' | 'AAA';
+  preset?:   RulePreset;
   rules?:    string[];
   position?: 'bottom-right' | 'bottom-left';
   debounce?: number;
@@ -432,7 +433,7 @@ const SettingsPanel: React.FC<SettingsProps> = ({ apiKey, onSave }) => {
 
 // ─── Main Overlay ──────────────────────────────────────────────────────────────
 export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
-  level = 'AA', rules, position = 'bottom-right', debounce = 750,
+  level = 'AA', preset = 'fast', rules, position = 'bottom-right', debounce = 750,
 }) => {
   const [open, setOpen]         = useState(() => { try { return sessionStorage.getItem('wcag-open') === '1'; } catch { return false; } });
   const [view, setView]         = useState<View>('list');
@@ -480,7 +481,7 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
     scanningRef.current = true;
     setScanning(true);
     try {
-      const res = await scanBrowserPage({ level, rules } as ScannerOptions);
+      const res = await scanBrowserPage({ level, preset, rules } as ScannerOptions);
       if (token === scanTokenRef.current) {
         setResults(res);
         setLastScan(new Date());
@@ -496,7 +497,7 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
         }
       }, 300);
     }
-  }, [level, rules]);
+  }, [level, preset, rules]);
 
   useEffect(() => { scan(); }, [scan]);
 
