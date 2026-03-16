@@ -5,3 +5,4 @@ export type { BrowserScanResults, AnnotatedViolation, AnnotatedWarning } from '.
 export { initWcagOverlay } from './init';
 export { getAiSuggestion, getStoredApiKey, setStoredApiKey } from './gemini';
 export type { AiSuggestion } from './gemini';
+export { FAST_RULES, FULL_RULES, RULE_PRESETS, resolveRuleNames } from '../rules/presets';

@@ -364,10 +364,12 @@ const ViolationCard: React.FC<CardProps> = ({ item, pinned, onPin, apiKey }) => 
 // ─── Settings Panel ────────────────────────────────────────────────────────────
 interface SettingsProps {
   apiKey: string;
+  preset: RulePreset;
   onSave: (key: string) => void;
+  onPresetChange: (preset: RulePreset) => void;
 }
 
-const SettingsPanel: React.FC<SettingsProps> = ({ apiKey, onSave }) => {
+const SettingsPanel: React.FC<SettingsProps> = ({ apiKey, preset, onSave, onPresetChange }) => {
   const [draft, setDraft] = useState(apiKey);
   const [saved, setSaved] = useState(false);
 
@@ -427,6 +429,27 @@ const SettingsPanel: React.FC<SettingsProps> = ({ apiKey, onSave }) => {
         <span style={{ color: '#7c3aed', fontWeight: 600 }}>aistudio.google.com</span>
         {' '}→ Get API key. The free tier is sufficient for development use.
       </p>
+
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid #e2e8f0' }}>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#374151', marginBottom: 4 }}>
+          Scan Preset
+        </label>
+        <select
+          value={preset}
+          onChange={e => onPresetChange(e.target.value as RulePreset)}
+          style={{
+            width: '100%', boxSizing: 'border-box', fontSize: 12,
+            border: '1px solid #d1d5db', borderRadius: 6, padding: '7px 10px',
+            outline: 'none', background: '#f9fafb', color: '#111827',
+          }}
+        >
+          <option value="fast">Fast</option>
+          <option value="full">Full</option>
+        </select>
+        <p style={{ margin: '8px 0 0', fontSize: 10, color: '#64748b', lineHeight: 1.6 }}>
+          `fast` runs the default rule set. `full` also includes heavier checks like `backgroundImages`.
+        </p>
+      </div>
     </div>
   );
 };
@@ -444,6 +467,7 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
   const [lastScan, setLastScan] = useState<Date | null>(null);
   const [pinnedEl, setPinnedEl] = useState<Element | null>(null);
   const [apiKey, setApiKey]     = useState<string>(() => getStoredApiKey());
+  const [activePreset, setActivePreset] = useState<RulePreset>(preset);
 
   // Drag
   const [pos, setPos]     = useState<{ x: number; y: number } | null>(null);
@@ -481,7 +505,7 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
     scanningRef.current = true;
     setScanning(true);
     try {
-      const res = await scanBrowserPage({ level, preset, rules } as ScannerOptions);
+      const res = await scanBrowserPage({ level, preset: activePreset, rules } as ScannerOptions);
       if (token === scanTokenRef.current) {
         setResults(res);
         setLastScan(new Date());
@@ -497,7 +521,7 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
         }
       }, 300);
     }
-  }, [level, preset, rules]);
+  }, [activePreset, level, rules]);
 
   useEffect(() => { scan(); }, [scan]);
 
@@ -647,7 +671,12 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
           </div>
 
           {view === 'settings' ? (
-            <SettingsPanel apiKey={apiKey} onSave={k => setApiKey(k)} />
+            <SettingsPanel
+              apiKey={apiKey}
+              preset={activePreset}
+              onSave={k => setApiKey(k)}
+              onPresetChange={setActivePreset}
+            />
           ) : (
             <>
               {/* Summary */}

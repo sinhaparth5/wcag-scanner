@@ -186,7 +186,7 @@ export function getElementPath(el: Element): string {
   return parts.join(' › ');
 }
 
-function findElement(item: Violation | Warning, doc: Document): Element | null {
+export function findElement(item: Violation | Warning, doc: Document): Element | null {
   const { element: info, snippet } = item;
 
   // 1. ID — most reliable
@@ -216,7 +216,7 @@ function findElement(item: Violation | Warning, doc: Document): Element | null {
   return null;
 }
 
-function findBySnippet(snippet: string, doc: Document): Element | null {
+export function findBySnippet(snippet: string, doc: Document): Element | null {
   const tagMatch = snippet.match(/^<([\w-]+)([\s\S]*?)(?:\s*\/?>)/);
   if (!tagMatch) return null;
 

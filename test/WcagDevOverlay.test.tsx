@@ -185,4 +185,46 @@ describe('WcagDevOverlay', () => {
     expect(highlight?.textContent).toContain('Pinned button#target');
     expect(target?.scrollIntoView).toHaveBeenCalled();
   });
+
+  it('lets the user switch scan presets from settings', async () => {
+    mockScanBrowserPage
+      .mockResolvedValueOnce({
+        violations: [],
+        warnings: [],
+        passes: [],
+        duration: 5,
+      })
+      .mockResolvedValueOnce({
+        violations: [],
+        warnings: [],
+        passes: [],
+        duration: 6,
+      });
+
+    await act(async () => {
+      root!.render(<WcagDevOverlay />);
+    });
+    await nextTick();
+
+    const settingsButton = Array.from(dom!.window.document.querySelectorAll('button'))
+      .find(button => button.getAttribute('title') === 'Settings');
+    expect(settingsButton).toBeDefined();
+
+    await act(async () => {
+      settingsButton!.dispatchEvent(new dom!.window.MouseEvent('click', { bubbles: true }));
+    });
+    await nextTick();
+
+    const presetSelect = Array.from(dom!.window.document.querySelectorAll('select'))
+      .find(select => (select as HTMLSelectElement).value === 'fast') as HTMLSelectElement | undefined;
+    expect(presetSelect).toBeDefined();
+
+    await act(async () => {
+      presetSelect!.value = 'full';
+      presetSelect!.dispatchEvent(new dom!.window.Event('change', { bubbles: true }));
+    });
+    await nextTick();
+
+    expect(mockScanBrowserPage).toHaveBeenLastCalledWith(expect.objectContaining({ preset: 'full' }));
+  });
 });

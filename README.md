@@ -69,6 +69,22 @@ initWcagOverlay({
 
 `preset: 'full'` includes the heavier optional checks such as `backgroundImages`. Use `rules` when you want an exact rule list.
 
+**Preset Contents**
+
+| Preset | Rules included |
+| --- | --- |
+| `fast` | `images`, `contrast`, `forms`, `aria`, `structure`, `keyboard` |
+| `full` | `images`, `contrast`, `forms`, `aria`, `structure`, `keyboard`, `backgroundImages` |
+
+You can also import these programmatically:
+
+```ts
+import { RULE_PRESETS, resolveRuleNames } from 'wcag-scanner';
+
+console.log(RULE_PRESETS.fast);
+console.log(resolveRuleNames({ preset: 'full' }));
+```
+
 **Features:**
 - Hover over a violation to highlight the element on the page
 - Click to pin the highlight; click again to unpin
@@ -99,6 +115,10 @@ const targeted = await scanHtml('<div style="background-image:url(hero.jpg)"></d
   rules: ['images', 'backgroundImages'],
 });
 
+// Or resolve a built-in preset yourself
+// import { RULE_PRESETS } from 'wcag-scanner';
+// const results = await scanHtml(html, { rules: RULE_PRESETS.full });
+
 // Generate and save a report
 const html = formatReport(results, 'html');   // 'html' | 'json' | 'console'
 saveReport(html, 'accessibility-report.html');
@@ -125,9 +145,27 @@ app.use(middleware.express.createMiddleware({
   },
 }));
 
+// Switch to preset: 'full' if you also want heavier checks like backgroundImages.
+
 app.get('/', (req, res) => {
   res.send(`<!DOCTYPE html><html><body><h1>Hello</h1></body></html>`);
 });
 
 app.listen(3000);
 ```
+
+## 📊 Profile Summary
+
+Current local synthetic benchmark baseline from the repo profiling scripts:
+
+| Rule | Command | Approx. duration |
+| --- | --- | --- |
+| `images` | `npm run profile:images` | `128ms` |
+| `forms` | `npm run profile:forms` | `484ms` |
+| `aria` | `npm run profile:aria` | `398ms` |
+| `contrast` | `npm run profile:contrast` | `1836ms` |
+
+Notes:
+- These are synthetic local benchmarks, not production browser traces.
+- `contrast` is currently the main runtime hotspot.
+- `backgroundImages` is intentionally excluded from the default `fast` preset because it is a heavier optional check.

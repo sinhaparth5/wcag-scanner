@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { scanHtml, scanFile, formatReport } from '../src/index';
+import { scanHtml, scanFile, formatReport, RULE_PRESETS, resolveRuleNames } from '../src/index';
 
 const ACCESSIBLE_HTML = `
 <!DOCTYPE html>
@@ -132,5 +132,17 @@ describe('formatReport', () => {
   it('should default to json when format is omitted', () => {
     const output = formatReport(results);
     expect(() => JSON.parse(output)).not.toThrow();
+  });
+});
+
+describe('rule presets', () => {
+  it('should expose fast and full preset helpers', () => {
+    expect(RULE_PRESETS.fast).toContain('images');
+    expect(RULE_PRESETS.full).toContain('backgroundImages');
+  });
+
+  it('should resolve preset rules unless explicit rules are provided', () => {
+    expect(resolveRuleNames({ preset: 'full' })).toContain('backgroundImages');
+    expect(resolveRuleNames({ preset: 'full', rules: ['images'] })).toEqual(['images']);
   });
 });

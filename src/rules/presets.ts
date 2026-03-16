@@ -2,6 +2,10 @@ import { ScannerOptions } from '../types';
 
 export const FAST_RULES = ['images', 'contrast', 'forms', 'aria', 'structure', 'keyboard'] as const;
 export const FULL_RULES = [...FAST_RULES, 'backgroundImages'] as const;
+export const RULE_PRESETS = {
+  fast: [...FAST_RULES],
+  full: [...FULL_RULES],
+} as const;
 
 export function resolveRuleNames(
   options: ScannerOptions,

@@ -58,6 +58,36 @@ describe('Contrast Rule', () => {
       const pass = results.passes.find(p => p.rule === 'color-contrast');
       expect(pass).toBeDefined();
     });
+
+    it('should parse named, hex and rgba colors and pass large bold text', async () => {
+      const html = `
+        <html>
+          <body style="background-color: #ffffff">
+            <p style="color: black">named color</p>
+            <p style="color: #000">hex color</p>
+            <p style="color: rgba(0, 0, 0, 0.8); font-size: 19px; font-weight: bold">large bold text</p>
+          </body>
+        </html>
+      `;
+      const { document, window } = createDocAndWin(html);
+      const results = await contrastRule.check(document, window, { level: 'AA' });
+
+      expect(results.passes.filter(p => p.rule === 'color-contrast').length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should parse long hex colors and other named colors', async () => {
+      const html = `
+        <html>
+          <body style="background-color: white">
+            <p style="color: #000000">long hex</p>
+            <p style="color: blue">named blue</p>
+          </body>
+        </html>
+      `;
+      const { document, window } = createDocAndWin(html);
+      const results = await contrastRule.check(document, window, { level: 'A' });
+      expect(results.passes.filter(p => p.rule === 'color-contrast').length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe('WCAG levels', () => {
@@ -79,6 +109,52 @@ describe('Contrast Rule', () => {
       const aaaViolation = resultsAAA.violations.find(v => v.rule === 'color-contrast');
       expect(aaaViolation).toBeDefined();
       expect(aaaViolation?.wcag).toContain('1.4.6');
+    });
+  });
+
+  describe('Fallback handling', () => {
+    it('should default background color to white when ancestors are transparent', async () => {
+      const html = `
+        <html>
+          <body>
+            <div style="background-color: transparent">
+              <p style="color: #777">transparent ancestry</p>
+            </div>
+          </body>
+        </html>
+      `;
+      const { document, window } = createDocAndWin(html);
+      const results = await contrastRule.check(document, window, { level: 'AA' });
+      expect(results.violations.some(v => v.rule === 'color-contrast')).toBe(true);
+    });
+
+    it('should treat unknown colors as insufficient contrast', async () => {
+      const html = '<html><body><p style="color: currentColor">unknown parse</p></body></html>';
+      const { document, window } = createDocAndWin(html);
+      const results = await contrastRule.check(document, window, { level: 'AA' });
+      expect(results.violations.some(v => v.rule === 'color-contrast')).toBe(true);
+    });
+
+    it('should skip elements when computed colors are unavailable', async () => {
+      const html = '<html><body><p>sample text</p></body></html>';
+      const { document, window } = createDocAndWin(html);
+      const original = window.getComputedStyle.bind(window);
+
+      jest.spyOn(window, 'getComputedStyle').mockImplementation((element: Element) => {
+        const style = original(element);
+        if (element.tagName === 'P') {
+          return {
+            ...style,
+            color: '',
+            backgroundColor: '',
+          } as CSSStyleDeclaration;
+        }
+        return style;
+      });
+
+      const results = await contrastRule.check(document, window, { level: 'AA' });
+      expect(results.violations.some(v => v.rule === 'color-contrast')).toBe(false);
+      expect(results.passes.some(p => p.rule === 'color-contrast')).toBe(false);
     });
   });
 });

@@ -78,6 +78,26 @@ describe('WCAGScanner', () => {
   });
 
   describe('rules', () => {
+    const rulesDir = path.join(__dirname, '..', 'src', 'rules');
+    const tempRuleFiles: string[] = [];
+
+    afterEach(() => {
+      tempRuleFiles.forEach((filePath) => {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+
+        try {
+          delete require.cache[require.resolve(filePath)];
+        } catch {
+          // Ignore cache misses for files that failed to load.
+        }
+      });
+
+      tempRuleFiles.length = 0;
+      jest.restoreAllMocks();
+    });
+
     it('should include optional rules when preset is full', async () => {
       const scanner = new WCAGScanner({ preset: 'full' });
       await scanner.loadHTML('<html><body><div style="background-image:url(hero.jpg)"></div></body></html>');
@@ -150,6 +170,67 @@ describe('WCAGScanner', () => {
       
       expect(results.passes.length).toBe(1);
       expect(results.passes[0].rule).toBe('custom-rule');
+    });
+
+    it('should return early when the rules directory is missing', async () => {
+      const scanner = new WCAGScanner();
+      const existsSpy = jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const readdirSpy = jest.spyOn(fs, 'readdirSync');
+
+      await expect(scanner.loadRules()).resolves.toBeUndefined();
+
+      expect(existsSpy).toHaveBeenCalled();
+      expect(readdirSpy).not.toHaveBeenCalled();
+      expect((scanner as any).rules.size).toBe(0);
+    });
+
+    it('should load valid rules and continue past invalid rule modules', async () => {
+      const validRulePath = path.join(rulesDir, '__tempValidRule.js');
+      const invalidRulePath = path.join(rulesDir, '__tempInvalidRule.js');
+      const brokenRulePath = path.join(rulesDir, '__tempBrokenRule.js');
+
+      fs.writeFileSync(validRulePath, 'module.exports = { check: async () => ({ passes: [], violations: [], warnings: [] }) };');
+      fs.writeFileSync(invalidRulePath, 'module.exports = { nope: true };');
+      fs.writeFileSync(brokenRulePath, 'throw new Error("broken temp rule");');
+      tempRuleFiles.push(validRulePath, invalidRulePath, brokenRulePath);
+
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const scanner = new WCAGScanner();
+
+      await scanner.loadRules();
+
+      expect((scanner as any).rules.has('__tempValidRule')).toBe(true);
+      expect((scanner as any).rules.has('__tempInvalidRule')).toBe(false);
+      expect((scanner as any).rules.has('__tempBrokenRule')).toBe(false);
+      expect(logSpy).toHaveBeenCalledWith('Skipping rule __tempInvalidRule: Invalid format');
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Error loading rule from __tempBrokenRule.js:'), expect.any(Error));
+    });
+
+    it('should continue scanning when one rule throws', async () => {
+      const scanner = new WCAGScanner({ rules: ['ok-rule', 'bad-rule'] });
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      await scanner.loadHTML('<html><body><h1>Test</h1></body></html>');
+
+      scanner.registerRule('ok-rule', {
+        check: async () => ({
+          passes: [{ rule: 'ok-rule', description: 'ok' }],
+          violations: [],
+          warnings: []
+        })
+      });
+
+      scanner.registerRule('bad-rule', {
+        check: async () => {
+          throw new Error('rule failed');
+        }
+      });
+
+      const results = await scanner.scan();
+
+      expect(results.passes).toHaveLength(1);
+      expect(results.passes[0].rule).toBe('ok-rule');
+      expect(errorSpy).toHaveBeenCalledWith('Error running rule bad-rule:', expect.any(Error));
     });
   });
 });

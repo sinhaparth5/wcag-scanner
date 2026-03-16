@@ -4,6 +4,7 @@ import { generateReport, ReporterFormat } from './reporters';
 import middleware from './middleware';
 import fs from 'fs';
 import path from 'path';
+export { FAST_RULES, FULL_RULES, RULE_PRESETS, resolveRuleNames } from './rules/presets';
 
 /**
  * Scan an HTML string for WCAG violations.

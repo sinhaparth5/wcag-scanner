@@ -90,6 +90,70 @@ describe('Images Rule', () => {
     expect(pass).toBeDefined();
   });
 
+  it('should warn about generic and overly long alt text', async () => {
+    const html = `
+      <html>
+        <body>
+          <img src="logo.jpg" alt="logo">
+          <img src="story.jpg" alt="${'a'.repeat(130)}">
+        </body>
+      </html>
+    `;
+
+    const document = createDocument(html);
+    const window = createWindow(html);
+
+    const results = await imagesRule.check(document, window, { level: 'AA' });
+
+    expect(results.warnings.some(w => w.rule === 'img-alt-generic')).toBe(true);
+    expect(results.warnings.some(w => w.rule === 'img-alt-long')).toBe(true);
+  });
+
+  it('should handle SVG accessible name branches', async () => {
+    const html = `
+      <html>
+        <body>
+          <svg id="missing-name"></svg>
+          <svg id="empty-title"><title> </title></svg>
+          <svg id="named" role="img" aria-label="Chart"></svg>
+        </body>
+      </html>
+    `;
+
+    const document = createDocument(html);
+    const window = createWindow(html);
+
+    const results = await imagesRule.check(document, window, { level: 'AA' });
+
+    expect(results.violations.some(v => v.rule === 'svg-accessible-name')).toBe(true);
+    expect(results.violations.some(v => v.rule === 'svg-title-empty')).toBe(true);
+    expect(results.passes.some(p => p.rule === 'svg-accessible-name')).toBe(true);
+  });
+
+  it('should detect used and unused image maps', async () => {
+    const html = `
+      <html>
+        <body>
+          <map name="unused"><area shape="rect" coords="0,0,10,10" href="/"></map>
+          <img src="plan.jpg" usemap="#used">
+          <map name="used">
+            <area shape="rect" coords="0,0,10,10" href="/" alt="Top left">
+            <area shape="rect" coords="10,10,20,20" href="/next">
+          </map>
+        </body>
+      </html>
+    `;
+
+    const document = createDocument(html);
+    const window = createWindow(html);
+
+    const results = await imagesRule.check(document, window, { level: 'AA' });
+
+    expect(results.warnings.some(w => w.rule === 'map-unused')).toBe(true);
+    expect(results.passes.some(p => p.rule === 'area-alt')).toBe(true);
+    expect(results.violations.some(v => v.rule === 'area-alt')).toBe(true);
+  });
+
   it('should not include background image warnings in the images rule', async () => {
     const html = `
       <html>

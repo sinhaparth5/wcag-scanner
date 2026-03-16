@@ -96,6 +96,21 @@ describe('Structure Rule', () => {
       const warning = results.warnings.find(w => w.rule === 'landmark-navigation');
       expect(warning).toBeUndefined();
     });
+
+    it('should warn when multiple complementary landmarks lack accessible names', async () => {
+      const html = `
+        <html lang="en">
+          <head><title>T</title></head>
+          <body>
+            <main><h1>T</h1></main>
+            <aside></aside>
+            <aside></aside>
+          </body>
+        </html>
+      `;
+      const results = await structureRule.check(createDoc(html), createWin(html), {});
+      expect(results.warnings.some(w => w.rule === 'landmark-complementary-name')).toBe(true);
+    });
   });
 
   describe('Document structure', () => {
@@ -182,6 +197,12 @@ describe('Structure Rule', () => {
       const violation = results.violations.find(v => v.rule === 'dl-dd');
       expect(violation).toBeDefined();
     });
+
+    it('should detect invalid direct children inside definition lists', async () => {
+      const html = '<html lang="en"><head><title>T</title></head><body><main><h1>T</h1><dl><span>oops</span><dt>term</dt><dd>desc</dd></dl></main></body></html>';
+      const results = await structureRule.check(createDoc(html), createWin(html), {});
+      expect(results.violations.some(v => v.rule === 'dl-structure')).toBe(true);
+    });
   });
 
   describe('Tables', () => {
@@ -213,6 +234,47 @@ describe('Structure Rule', () => {
       const results = await structureRule.check(createDoc(html), createWin(html), {});
       const warning = results.warnings.find(w => w.rule === 'table-layout');
       expect(warning).toBeDefined();
+    });
+
+    it('should detect empty headers and empty captions', async () => {
+      const html = `
+        <html lang="en">
+          <head><title>T</title></head>
+          <body>
+            <main>
+              <h1>T</h1>
+              <table>
+                <caption> </caption>
+                <thead><tr><th></th></tr></thead>
+                <tbody><tr><td>A</td></tr></tbody>
+              </table>
+            </main>
+          </body>
+        </html>
+      `;
+      const results = await structureRule.check(createDoc(html), createWin(html), {});
+      expect(results.violations.some(v => v.rule === 'table-header-empty')).toBe(true);
+      expect(results.violations.some(v => v.rule === 'table-caption-empty')).toBe(true);
+    });
+
+    it('should warn when table headers are missing scope attributes', async () => {
+      const html = `
+        <html lang="en">
+          <head><title>T</title></head>
+          <body>
+            <main>
+              <h1>T</h1>
+              <table>
+                <caption>Users</caption>
+                <thead><tr><th>Name</th></tr></thead>
+                <tbody><tr><td>Alice</td></tr></tbody>
+              </table>
+            </main>
+          </body>
+        </html>
+      `;
+      const results = await structureRule.check(createDoc(html), createWin(html), {});
+      expect(results.warnings.some(w => w.rule === 'table-header-scope')).toBe(true);
     });
   });
 });
