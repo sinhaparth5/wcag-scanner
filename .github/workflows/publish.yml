@@ -37,7 +37,7 @@ jobs:
 
   # ── 2. Create GitHub Release ─────────────────────────────────────────────────
   release:
-    needs: build
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: write

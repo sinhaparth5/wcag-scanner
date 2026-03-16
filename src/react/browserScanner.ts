@@ -41,24 +41,41 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
   const violations: Violation[] = [];
   const warnings: Warning[] = [];
   const passes: Pass[] = [];
+  const overlayRoot = document.querySelector('[data-wcag-overlay-root="true"]');
+  const overlayParent = overlayRoot?.parentNode ?? null;
+  const overlayNextSibling = overlayRoot?.nextSibling ?? null;
 
-  for (const name of ruleNames) {
-    const rule = RULES[name];
-    if (!rule) continue;
-    try {
-      const res = await rule.check(document, window as unknown as Window, options);
-      violations.push(...(res.violations || []));
-      warnings.push(...(res.warnings || []));
-      passes.push(...(res.passes || []));
-    } catch {
-      // rule failed in browser context — skip silently
+  try {
+    // Detach the dev overlay while scanning so the inspector never scans itself.
+    if (overlayRoot && overlayParent) {
+      overlayParent.removeChild(overlayRoot);
+    }
+
+    for (const name of ruleNames) {
+      const rule = RULES[name];
+      if (!rule) continue;
+      try {
+        const res = await rule.check(document, window as unknown as Window, options);
+        violations.push(...(res.violations || []));
+        warnings.push(...(res.warnings || []));
+        passes.push(...(res.passes || []));
+      } catch {
+        // rule failed in browser context — skip silently
+      }
+    }
+  } finally {
+    if (overlayRoot && overlayParent) {
+      overlayParent.insertBefore(overlayRoot, overlayNextSibling);
     }
   }
 
   // Exclude elements that live inside the WCAG overlay itself
-  const overlayRoot = document.querySelector('[data-wcag-overlay="true"]');
+  const overlaySurface = document.querySelector('[data-wcag-overlay="true"]');
   const isInOverlay = (el: Element | null): boolean =>
-    el != null && overlayRoot != null && overlayRoot.contains(el);
+    el != null && (
+      (overlaySurface != null && overlaySurface.contains(el)) ||
+      (overlayRoot != null && overlayRoot.contains(el))
+    );
 
   const annotate = <T extends Violation | Warning>(item: T): T & {
     domElement?: Element;
@@ -76,11 +93,39 @@ export async function scanBrowserPage(options: ScannerOptions = {}): Promise<Bro
   };
 
   return {
-    violations: violations.map(annotate).filter(v => !isInOverlay(v.domElement ?? null)),
-    warnings:   warnings.map(annotate).filter(w => !isInOverlay(w.domElement ?? null)),
-    passes,
+    violations: dedupeIssues(violations.map(annotate)).filter(v => !isInOverlay(v.domElement ?? null)),
+    warnings: dedupeIssues(warnings.map(annotate)).filter(w => !isInOverlay(w.domElement ?? null)),
+    passes: dedupePasses(passes),
     duration: Math.round(performance.now() - start),
   };
+}
+
+function dedupeIssues<T extends Violation | Warning>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter(item => {
+    const key = [
+      item.rule,
+      item.description,
+      item.impact,
+      item.snippet,
+      item.element?.tagName,
+      item.element?.id,
+      item.element?.className,
+    ].join('::');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupePasses(items: Pass[]): Pass[] {
+  const seen = new Set<string>();
+  return items.filter(item => {
+    const key = [item.rule, item.description].join('::');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**

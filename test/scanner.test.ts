@@ -78,6 +78,29 @@ describe('WCAGScanner', () => {
   });
 
   describe('rules', () => {
+    it('should run the built-in default structure rule name', async () => {
+      const scanner = new WCAGScanner();
+      await scanner.loadHTML('<html><body><h1>Test</h1></body></html>');
+
+      scanner.registerRule('structure', {
+        check: async () => {
+          return {
+            passes: [{
+              rule: 'structure',
+              description: 'Structure rule ran',
+              element: { tagName: 'h1' }
+            }],
+            violations: [],
+            warnings: []
+          };
+        }
+      });
+
+      const results = await scanner.scan();
+
+      expect(results.passes.some(result => result.rule === 'structure')).toBe(true);
+    });
+
     it('should register and use custom rules', async () => {
       const scanner = new WCAGScanner();
       await scanner.loadHTML('<html><body><h1>Test</h1></body></html>');

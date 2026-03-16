@@ -3,6 +3,8 @@ import { ScannerOptions, ScanResults, Rule } from "./types";
 import fs from "fs";
 import path from "path";
 
+const DEFAULT_RULES = ['images', 'contrast', 'forms', 'aria', 'structure', 'keyboard'];
+
 /**
  * Main WCAG Scanner class
  */
@@ -20,7 +22,7 @@ export class WCAGScanner {
      */
     constructor(options: ScannerOptions = {}) {
         this.options = {
-            rules: ['images', 'headings', 'contrast', 'forms', 'aria'],
+            rules: DEFAULT_RULES,
             level: 'AA',
             ai: true,
             ...options
@@ -41,18 +43,14 @@ export class WCAGScanner {
      */
     async loadHTML(html: string, baseUrl = 'https://example.org'): Promise<boolean> {
         try {
+            this.dom?.window.close();
+
             // Create virtual DOM with robust error handling
             this.dom = new JSDOM(html, {
                 url: baseUrl,
-                resources: 'usable',
-                runScripts: 'dangerously',
+                runScripts: 'outside-only',
+                pretendToBeVisual: true,
                 beforeParse(window) {
-                    // Silence script errors
-                    window.addEventListener('error', (event) => {
-                        console.log(`Ignored script error: ${event.message}`);
-                        event.preventDefault();
-                    });
-
                     // Mock modern browser APIs that may be missing in JSDOM
                     if (!window.ReadableStream) {
                         window.ReadableStream = class MockReadableStream {
@@ -74,9 +72,6 @@ export class WCAGScanner {
             
             this.document = this.dom.window.document;
             this.window = this.dom.window as unknown as Window;
-
-            // Wait for resources to load
-            await new Promise(resolve => setTimeout(resolve, 100));
             return true;
         } catch (error) {
             console.error('Error loading HTML:', error);
@@ -185,7 +180,11 @@ export class WCAGScanner {
      * @returns ScanResults Current scan results
      */
     getResults(): ScanResults {
-        return this.results;
+        return {
+            passes: [...this.results.passes],
+            violations: [...this.results.violations],
+            warnings: [...this.results.warnings]
+        };
     }
 
     /**

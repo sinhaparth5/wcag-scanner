@@ -45,7 +45,7 @@ export default {
 
         for (const element of textElements) {
         // Skip empty or hidden elements
-        if (!element.textContent?.trim() || isElementHidden(element)) {
+        if (!element.textContent?.trim() || isElementHidden(element, window)) {
             continue;
         }
 
@@ -62,7 +62,7 @@ export default {
         // Determine if text is large according to WCAG
         const fontSize = parseFloat(style.fontSize);
         const fontWeight = style.fontWeight;
-        const isLargeText = fontSize >= 24 || (fontSize >= 18.5 && parseInt(fontWeight) >= 700);
+        const isLargeText = fontSize >= 24 || (fontSize >= 18.5 && isBoldWeight(fontWeight));
         
         // Get required contrast ratio
         const requiredRatio = isLargeText ? requirements.largeText : requirements.normalText;
@@ -109,17 +109,23 @@ export default {
  * Check if an element is hidden
  * @param element Element to check
  */
-function isElementHidden(element: Element): boolean {
+function isElementHidden(element: Element, window: Window): boolean {
   if (element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true') {
     return true;
   }
   
   try {
-    const style = getComputedStyle(element);
+    const style = window.getComputedStyle(element);
     return style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
   } catch (e) {
     return false;
   }
+}
+
+function isBoldWeight(fontWeight: string): boolean {
+  const numeric = parseInt(fontWeight, 10);
+  if (!Number.isNaN(numeric)) return numeric >= 700;
+  return fontWeight === 'bold' || fontWeight === 'bolder';
 }
 
 /**

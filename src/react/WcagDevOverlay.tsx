@@ -30,55 +30,171 @@ const IMPACT: Record<string, { color: string; bg: string; border: string }> = {
 const theme = (impact: string) => IMPACT[impact] ?? { color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' };
 
 // ─── Highlight helpers ─────────────────────────────────────────────────────────
-// No scrollIntoView on hover — only on pin — to eliminate lag
-let _hovered: { el: HTMLElement; outline: string; shadow: string } | null = null;
-let _pinned:  { el: HTMLElement; outline: string; shadow: string } | null = null;
-let _hoverRaf = 0;
+const HIGHLIGHT_ID = 'wcag-dev-highlight';
 
-function restoreEl(saved: { el: HTMLElement; outline: string; shadow: string }) {
-  saved.el.style.outline   = saved.outline;
-  saved.el.style.boxShadow = saved.shadow;
+function getHighlightLayer(): HTMLDivElement {
+  let layer = document.getElementById(HIGHLIGHT_ID) as HTMLDivElement | null;
+  if (layer) return layer;
+
+  layer = document.createElement('div');
+  layer.id = HIGHLIGHT_ID;
+  layer.setAttribute('aria-hidden', 'true');
+  Object.assign(layer.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '0',
+    height: '0',
+    display: 'none',
+    pointerEvents: 'none',
+    zIndex: '2147483646',
+    borderRadius: '10px',
+    boxSizing: 'border-box',
+    transition: 'opacity 80ms ease-out, transform 80ms ease-out',
+    transform: 'translateZ(0)',
+  } satisfies Partial<CSSStyleDeclaration>);
+
+  const label = document.createElement('div');
+  label.setAttribute('data-wcag-highlight-label', 'true');
+  Object.assign(label.style, {
+    position: 'absolute',
+    top: '-30px',
+    left: '0',
+    padding: '4px 8px',
+    borderRadius: '999px',
+    color: '#fff',
+    fontSize: '11px',
+    fontWeight: '700',
+    letterSpacing: '0.03em',
+    boxShadow: '0 6px 18px rgba(15,23,42,0.22)',
+    whiteSpace: 'nowrap',
+    maxWidth: '280px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  } satisfies Partial<CSSStyleDeclaration>);
+  layer.appendChild(label);
+  document.body.appendChild(layer);
+  return layer;
 }
 
-function applyOutline(el: HTMLElement, color: string) {
-  el.style.outline   = `2px solid ${color}`;
-  el.style.boxShadow = `0 0 0 4px ${color}28`;
+type HighlightMode = 'hover' | 'pinned';
+
+let _hovered: Element | null = null;
+let _pinned: Element | null = null;
+let _highlightRaf = 0;
+let _highlightCleanup: (() => void) | null = null;
+
+function labelForElement(el: Element): string {
+  const htmlEl = el as HTMLElement;
+  const parts = [el.tagName.toLowerCase()];
+  if (htmlEl.id) parts.push(`#${htmlEl.id}`);
+  const classes = typeof htmlEl.className === 'string'
+    ? htmlEl.className.trim().split(/\s+/).filter(Boolean).slice(0, 2)
+    : [];
+  if (classes.length) parts.push(`.${classes.join('.')}`);
+  return parts.join('');
+}
+
+function renderHighlight(el: Element, mode: HighlightMode): void {
+  const rect = el.getBoundingClientRect();
+  const layer = getHighlightLayer();
+  const label = layer.querySelector('[data-wcag-highlight-label="true"]') as HTMLDivElement | null;
+
+  if (rect.width <= 0 || rect.height <= 0) {
+    layer.style.display = 'none';
+    return;
+  }
+
+  const color = mode === 'pinned' ? '#7c3aed' : '#0ea5e9';
+  const glow = mode === 'pinned' ? 'rgba(124,58,237,0.35)' : 'rgba(14,165,233,0.28)';
+
+  Object.assign(layer.style, {
+    display: 'block',
+    top: `${Math.max(rect.top - 4, 0)}px`,
+    left: `${Math.max(rect.left - 4, 0)}px`,
+    width: `${Math.max(rect.width + 8, 12)}px`,
+    height: `${Math.max(rect.height + 8, 12)}px`,
+    border: `3px solid ${color}`,
+    background: `${color}0d`,
+    boxShadow: `0 0 0 4px ${glow}, 0 14px 34px rgba(15,23,42,0.16)`,
+    opacity: '1',
+  } satisfies Partial<CSSStyleDeclaration>);
+
+  if (label) {
+    label.textContent = mode === 'pinned' ? `Pinned ${labelForElement(el)}` : `Inspecting ${labelForElement(el)}`;
+    label.style.background = color;
+    label.style.top = rect.top < 48 ? `${rect.height + 10}px` : '-30px';
+  }
+}
+
+function syncHighlightPosition(): void {
+  cancelAnimationFrame(_highlightRaf);
+  _highlightRaf = requestAnimationFrame(() => {
+    if (_pinned) {
+      renderHighlight(_pinned, 'pinned');
+      return;
+    }
+    if (_hovered) {
+      renderHighlight(_hovered, 'hover');
+      return;
+    }
+    const layer = document.getElementById(HIGHLIGHT_ID) as HTMLDivElement | null;
+    if (layer) layer.style.display = 'none';
+  });
+}
+
+function ensureHighlightTracking(): void {
+  if (_highlightCleanup) return;
+  const update = () => syncHighlightPosition();
+  window.addEventListener('scroll', update, true);
+  window.addEventListener('resize', update);
+  _highlightCleanup = () => {
+    window.removeEventListener('scroll', update, true);
+    window.removeEventListener('resize', update);
+    _highlightCleanup = null;
+  };
+}
+
+function maybeStopHighlightTracking(): void {
+  if (_hovered || _pinned || !_highlightCleanup) return;
+  _highlightCleanup();
 }
 
 function hoverEl(el: Element | undefined) {
-  cancelAnimationFrame(_hoverRaf);
-  _hoverRaf = requestAnimationFrame(() => {
-    if (_hovered) { restoreEl(_hovered); _hovered = null; }
-    if (!el || _pinned?.el === el) return;
-    const h = el as HTMLElement;
-    _hovered = { el: h, outline: h.style.outline, shadow: h.style.boxShadow };
-    applyOutline(h, '#0ea5e9');
-  });
+  _hovered = !el || _pinned === el ? null : el;
+  ensureHighlightTracking();
+  syncHighlightPosition();
 }
 
 function clearHover() {
-  cancelAnimationFrame(_hoverRaf);
-  _hoverRaf = requestAnimationFrame(() => {
-    if (_hovered) { restoreEl(_hovered); _hovered = null; }
-  });
+  _hovered = null;
+  syncHighlightPosition();
+  maybeStopHighlightTracking();
 }
 
 /** Returns true if now pinned, false if unpinned */
 function togglePin(el: Element): boolean {
-  if (_hovered?.el === el) { restoreEl(_hovered); _hovered = null; }
-  if (_pinned?.el === el) { restoreEl(_pinned); _pinned = null; return false; }
-  if (_pinned) restoreEl(_pinned);
-  const h = el as HTMLElement;
-  _pinned = { el: h, outline: h.style.outline, shadow: h.style.boxShadow };
-  applyOutline(h, '#7c3aed');
-  h.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (_pinned === el) {
+    _pinned = null;
+    syncHighlightPosition();
+    maybeStopHighlightTracking();
+    return false;
+  }
+  _hovered = null;
+  _pinned = el;
+  ensureHighlightTracking();
+  syncHighlightPosition();
+  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   return true;
 }
 
 function clearAllHighlights() {
-  cancelAnimationFrame(_hoverRaf);
-  if (_hovered) { restoreEl(_hovered); _hovered = null; }
-  if (_pinned)  { restoreEl(_pinned);  _pinned  = null; }
+  cancelAnimationFrame(_highlightRaf);
+  _hovered = null;
+  _pinned = null;
+  const layer = document.getElementById(HIGHLIGHT_ID) as HTMLDivElement | null;
+  if (layer) layer.style.display = 'none';
+  maybeStopHighlightTracking();
 }
 
 // ─── ViolationCard ─────────────────────────────────────────────────────────────
@@ -338,6 +454,8 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
   const overlayRef   = useRef<HTMLDivElement | null>(null);
   const scanningRef  = useRef(false);
   const cooldownRef  = useRef(false);
+  const pendingScanRef = useRef(false);
+  const scanTokenRef = useRef(0);
 
   // ── Persist open state ────────────────────────────────────────────────────
   useEffect(() => {
@@ -347,19 +465,36 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
 
   // ── Scan ──────────────────────────────────────────────────────────────────
   const scan = useCallback(async () => {
-    if (scanningRef.current) return;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (scanningRef.current) {
+      pendingScanRef.current = true;
+      return;
+    }
+
+    const token = ++scanTokenRef.current;
     // Set cooldown BEFORE clearing scanningRef to close the observer gap
     cooldownRef.current = true;
     scanningRef.current = true;
     setScanning(true);
     try {
       const res = await scanBrowserPage({ level, rules } as ScannerOptions);
-      setResults(res);
-      setLastScan(new Date());
+      if (token === scanTokenRef.current) {
+        setResults(res);
+        setLastScan(new Date());
+      }
     } finally {
       scanningRef.current = false;
       setScanning(false);
-      setTimeout(() => { cooldownRef.current = false; }, 1200);
+      window.setTimeout(() => {
+        cooldownRef.current = false;
+        if (pendingScanRef.current) {
+          pendingScanRef.current = false;
+          void scan();
+        }
+      }, 300);
     }
   }, [level, rules]);
 
@@ -371,7 +506,10 @@ export const WcagDevOverlay: React.FC<WcagDevOverlayProps> = ({
       if (scanningRef.current || cooldownRef.current) return;
       if (overlayRef.current && mutations.every(m => overlayRef.current!.contains(m.target as Node))) return;
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(scan, debounce);
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        void scan();
+      }, debounce);
     });
 
     observerRef.current.observe(document.body, {

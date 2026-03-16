@@ -24,14 +24,14 @@ export function createMiddleware(options: ExpressMiddlewareOptions = {}) {
   const defaultOptions: ExpressMiddlewareOptions = {
     enabled: process.env.NODE_ENV !== 'production', // Disable in production by default
     level: 'AA',
-    headerName: 'X-WCAG-Violations',
+    headerName: undefined,
     inlineReport: false,
     ...options
   };
   
   return async function wcagScannerMiddleware(req: Request, res: Response, next: NextFunction) {
     // Skip if disabled or non-HTML request
-    if (!defaultOptions.enabled || !shouldProcessRequest(req)) {
+    if (!defaultOptions.enabled || !shouldProcessRequest(req) || !needsScanning(defaultOptions)) {
       return next();
     }
     
@@ -39,39 +39,57 @@ export function createMiddleware(options: ExpressMiddlewareOptions = {}) {
     const originalSend = res.send;
     
     // Override send method to intercept HTML responses
-    res.send = function(body: any): Response {
+    res.send = function(this: Response, body: any): Response {
       // Only process HTML responses
-      if (typeof body === 'string' && isHtmlResponse(res)) {
+      if (typeof body === 'string' && isHtmlResponse(res) && looksLikeHtmlDocument(body)) {
         try {
           // Create scanner
           const scanner = new WCAGScanner(defaultOptions);
-          
-          // Run scan asynchronously (we can't make res.send async)
-          scanner.loadHTML(body).then(() => {
-            return scanner.scan();
-          }).then((results) => {
-            // Add violation count header
-            res.setHeader(defaultOptions.headerName || 'X-WCAG-Violations', results.violations.length.toString());
-            
-            // Call violation handler if provided
-            if (defaultOptions.onViolation && results.violations.length > 0) {
-              defaultOptions.onViolation(results, req, res);
-            }
-            
-            // Add inline report if enabled
-            if (defaultOptions.inlineReport && results.violations.length > 0) {
-              body = insertInlineReport(body, results);
-            }
-            
-            // Send modified response
-            originalSend.call(res, body);
-          }).catch((error) => {
-            console.error('Error in WCAG scanner middleware:', error);
-            // Send original response if there's an error
-            originalSend.call(res, body);
-          });
-          
-          // Return a dummy response to prevent Express from sending twice
+          const response = this;
+
+          // If we do not need to mutate the response or set headers, scan after sending.
+          if (!requiresBlockingScan(defaultOptions)) {
+            void scanner.loadHTML(body)
+              .then(() => scanner.scan())
+              .then((results) => {
+                if (defaultOptions.onViolation && results.violations.length > 0) {
+                  defaultOptions.onViolation(results, req, res);
+                }
+              })
+              .catch((error) => {
+                console.error('Error in WCAG scanner middleware:', error);
+              });
+
+            return originalSend.call(response, body);
+          }
+
+          // Run scan before sending when we need to add headers or inline report.
+          void scanner.loadHTML(body)
+            .then(() => scanner.scan())
+            .then((results) => {
+              let finalBody = body;
+
+              if (defaultOptions.headerName) {
+                res.setHeader(defaultOptions.headerName, results.violations.length.toString());
+              }
+
+              if (defaultOptions.onViolation && results.violations.length > 0) {
+                defaultOptions.onViolation(results, req, res);
+              }
+
+              if (defaultOptions.inlineReport && results.violations.length > 0) {
+                finalBody = insertInlineReport(body, results);
+              }
+
+              res.send = originalSend;
+              originalSend.call(response, finalBody);
+            })
+            .catch((error) => {
+              console.error('Error in WCAG scanner middleware:', error);
+              res.send = originalSend;
+              originalSend.call(response, body);
+            });
+
           return res;
         } catch (error) {
           console.error('Error in WCAG scanner middleware:', error);
@@ -119,6 +137,18 @@ function shouldProcessRequest(req: Request): boolean {
 function isHtmlResponse(res: Response): boolean {
   const contentType = res.get('Content-Type') || '';
   return contentType.includes('html');
+}
+
+function needsScanning(options: ExpressMiddlewareOptions): boolean {
+  return Boolean(options.inlineReport || options.headerName || options.onViolation);
+}
+
+function requiresBlockingScan(options: ExpressMiddlewareOptions): boolean {
+  return Boolean(options.inlineReport || options.headerName);
+}
+
+function looksLikeHtmlDocument(body: string): boolean {
+  return /<(html|body|main|div|section|article|img|svg|form|a|button)\b/i.test(body);
 }
 
 /**

@@ -202,21 +202,33 @@ function checkSvgElements(document: Document, results: ScanResults): void {
  * @param results Scan results
  */
 function checkBackgroundImages(document: Document, window: Window, results: ScanResults): void {
-  // Find elements with background image
-  const allElements = document.querySelectorAll('*');
-  
-  allElements.forEach(element => {
+  const root = document.body ?? document.documentElement;
+  if (!root) return;
+
+  const walker = document.createTreeWalker(root, 1);
+  let current = walker.currentNode as Element | null;
+
+  while (current) {
+    const element = current;
+
+    if (!shouldInspectBackgroundImage(element)) {
+      current = walker.nextNode() as Element | null;
+      continue;
+    }
+
     const style = window.getComputedStyle(element);
     const backgroundImage = style.backgroundImage;
     
     // Skip if no background image or if it's "none"
     if (!backgroundImage || backgroundImage === 'none') {
-      return;
+      current = walker.nextNode() as Element | null;
+      continue;
     }
     
     // Skip if the element is hidden/decorative
-    if (isElementHidden(element) || element.getAttribute('aria-hidden') === 'true') {
-      return;
+    if (isElementHidden(element, window) || element.getAttribute('aria-hidden') === 'true') {
+      current = walker.nextNode() as Element | null;
+      continue;
     }
     
     const info: ElementInfo = {
@@ -246,7 +258,8 @@ function checkBackgroundImages(document: Document, window: Window, results: Scan
         });
       }
     }
-  });
+    current = walker.nextNode() as Element | null;
+  }
 }
 
 /**
@@ -317,7 +330,7 @@ function checkImageMaps(document: Document, results: ScanResults): void {
  * Check if an element is hidden
  * @param element Element to check
  */
-function isElementHidden(element: Element): boolean {
+function isElementHidden(element: Element, window: Window): boolean {
   // This is a simplified check - a real implementation would be more comprehensive
   if (element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true') {
     return true;
@@ -325,11 +338,38 @@ function isElementHidden(element: Element): boolean {
   
   // Check computed style if available
   try {
-    const style = getComputedStyle(element);
+    const style = window.getComputedStyle(element);
     return style.display === 'none' || style.visibility === 'hidden';
   } catch (e) {
     return false;
   }
+}
+
+function shouldInspectBackgroundImage(element: Element): boolean {
+  const tagName = element.tagName.toLowerCase();
+
+  if (['script', 'style', 'link', 'meta', 'head', 'title', 'base', 'noscript'].includes(tagName)) {
+    return false;
+  }
+
+  if (element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true') {
+    return false;
+  }
+
+  if (element.hasAttribute('style')) {
+    const inlineStyle = (element.getAttribute('style') || '').toLowerCase();
+    if (inlineStyle.includes('background')) return true;
+  }
+
+  if (element.hasAttribute('title') || element.hasAttribute('aria-label') || element.hasAttribute('aria-labelledby')) {
+    return true;
+  }
+
+  if (element.childElementCount === 0 && element.textContent?.trim()) {
+    return true;
+  }
+
+  return ['div', 'section', 'article', 'header', 'footer', 'main', 'aside', 'nav', 'figure', 'a', 'button'].includes(tagName);
 }
 
 /**
